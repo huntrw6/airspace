@@ -141,6 +141,21 @@ function aircraftIcon(heading?: number, aircraftType?: string): L.DivIcon {
 }
 
 function radarSweepElement(): SVGSVGElement {
+  const trailSegments = Array.from({ length: 24 }, (_, index) => {
+    const startAngle = -60 + index * 2.5;
+    const endAngle = startAngle + 2.5;
+    const point = (angle: number) => {
+      const radians = (angle * Math.PI) / 180;
+      return [50 + 50 * Math.sin(radians), 50 - 50 * Math.cos(radians)];
+    };
+    const [startX, startY] = point(startAngle);
+    const [endX, endY] = point(endAngle);
+    const progress = (index + 1) / 24;
+    const opacity = 0.012 + Math.pow(progress, 1.7) * 0.34;
+
+    return `<path class="radar-trail" style="opacity:${opacity.toFixed(3)}" d="M50 50 L${startX.toFixed(2)} ${startY.toFixed(2)} A50 50 0 0 1 ${endX.toFixed(2)} ${endY.toFixed(2)} Z" />`;
+  }).join("");
+
   const element = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   element.setAttribute("viewBox", "0 0 100 100");
   element.setAttribute("preserveAspectRatio", "none");
@@ -151,9 +166,7 @@ function radarSweepElement(): SVGSVGElement {
     <circle class="radar-range-ring" cx="50" cy="50" r="33.33" />
     <circle class="radar-center-dot" cx="50" cy="50" r="1.25" />
     <g class="radar-sweep-vector">
-      <path class="radar-trail radar-trail-far" d="M50 50 L6.7 25 A50 50 0 0 1 50 0 Z" />
-      <path class="radar-trail radar-trail-mid" d="M50 50 L17.9 11.7 A50 50 0 0 1 50 0 Z" />
-      <path class="radar-trail radar-trail-near" d="M50 50 L32.9 3 A50 50 0 0 1 50 0 Z" />
+      ${trailSegments}
       <line class="radar-beam" x1="50" y1="50" x2="50" y2="0" />
     </g>`;
   return element;

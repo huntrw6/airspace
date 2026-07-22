@@ -317,15 +317,6 @@ summary {
 .radar-trail {
   fill: #5ed2e8;
 }
-.radar-trail-far {
-  opacity: 0.04;
-}
-.radar-trail-mid {
-  opacity: 0.09;
-}
-.radar-trail-near {
-  opacity: 0.17;
-}
 .radar-beam {
   stroke: #8cecff;
   stroke-width: 0.65;
