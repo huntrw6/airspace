@@ -41,8 +41,12 @@ def notification_payload(sighting: Sighting, public_url: str) -> dict:
     flight_name = " ".join(value for value in (airline, callsign) if value)
     altitude_text = f" at {altitude:,.0f} feet" if isinstance(altitude, (int, float)) else ""
     return {
-        "title": "📡 In Your AirSpace ✈️",
-        "body": f"{flight_name}\n{origin} ➤ {destination}\n{aircraft}{altitude_text}",
+        "title": (
+            "📡 In Your AirSpace ✈️\n"
+            f"{flight_name}\n"
+            f"{origin} ➤ {destination}\n"
+            f"{aircraft}{altitude_text}"
+        ),
         "tag": f"airspace-{sighting.id}",
         "url": f"{public_url.rstrip('/')}/?sighting={sighting.id}",
     }
