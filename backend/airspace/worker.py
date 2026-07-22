@@ -59,8 +59,11 @@ class PollingWorker:
             health.last_attempt_at = now
             locations = db.scalars(select(MonitoredLocation).where(MonitoredLocation.enabled)).all()
             regions = group_regions(
-                LocationPoint(row.id, row.latitude, row.longitude, row.radius_km + MAP_BUFFER_KM)
-                for row in locations
+                (
+                    LocationPoint(row.id, row.latitude, row.longitude, row.radius_km)
+                    for row in locations
+                ),
+                query_padding_km=MAP_BUFFER_KM,
             )
             flights_by_location: dict[str, list[NormalizedFlight]] = {}
             successful: set[str] = set()

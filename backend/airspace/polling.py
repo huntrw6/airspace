@@ -22,7 +22,9 @@ def cell_key(latitude: float, longitude: float) -> tuple[int, int]:
     return min(max(row, 0), max_row), min(max(column, 0), max_column)
 
 
-def group_regions(locations: Iterable[LocationPoint]) -> dict[Region, list[str]]:
+def group_regions(
+    locations: Iterable[LocationPoint], query_padding_km: float = 0
+) -> dict[Region, list[str]]:
     cells: dict[tuple[int, int], list[str]] = {}
     for location in locations:
         latitude_delta = location.radius_km / 111.32
@@ -44,11 +46,15 @@ def group_regions(locations: Iterable[LocationPoint]) -> dict[Region, list[str]]
     result: dict[Region, list[str]] = {}
     for (row, column), ids in cells.items():
         south, west = row * CELL_DEGREES - 90, column * CELL_DEGREES - 180
+        latitude_padding = max(0, query_padding_km) / 111.32
+        latitude = south + CELL_DEGREES / 2
+        longitude_scale = max(0.1, math.cos(math.radians(latitude)))
+        longitude_padding = max(0, query_padding_km) / (111.32 * longitude_scale)
         region = Region(
-            south=south,
-            north=south + CELL_DEGREES,
-            west=west,
-            east=west + CELL_DEGREES,
+            south=max(-90, south - latitude_padding),
+            north=min(90, south + CELL_DEGREES + latitude_padding),
+            west=max(-180, west - longitude_padding),
+            east=min(180, west + CELL_DEGREES + longitude_padding),
             key=f"{row}:{column}",
         )
         result[region] = ids

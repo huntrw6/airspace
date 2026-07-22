@@ -1,7 +1,8 @@
 # Regional polling
 
 Active locations are assigned to every deterministic 0.25-degree grid cell intersected by their
-configured radius plus a 2 km map buffer. One provider request is planned per occupied cell per cycle, so overlapping
+configured radius. Each selected cell's provider bounds are padded by 2 km for map previews without
+creating additional regional requests. One provider request is planned per occupied cell per cycle, so overlapping
 locations share requests, including at cell boundaries. Results from adjacent cells are deduplicated
 by normalized flight identity, keeping the newest observation. The strategy is intentionally simple
 and testable. `max_regions_per_cycle` bounds request volume when users are widely distributed;
@@ -17,6 +18,6 @@ The default provider interval is 20 seconds. Browser dashboards also refresh the
 sighting snapshot every 15 seconds as a fallback for a buffered or interrupted event stream; those
 fallback requests read AirSpace's database and do not create additional provider traffic. Between
 provider observations, the map projects each marker for no longer than the time its reported speed
-would take to cross that location's circle plus the 2 km buffer on both sides. A short missed
-cycle changes a sighting to `held`, which remains visible until the normal stale lifecycle moves it
-into history.
+and heading would take to reach the buffered circle boundary from its observed position. A short
+missed cycle changes a sighting to `held`, which remains visible until the normal stale lifecycle
+moves it into history.

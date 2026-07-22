@@ -29,6 +29,21 @@ def test_radius_crossing_cell_boundary_queries_adjacent_cells():
     assert all(ids == ["edge"] for ids in regions.values())
 
 
+def test_query_padding_expands_bounds_without_adding_regions():
+    location = LocationPoint("buffered", 34.0, -117.9125, radius_km=8)
+    original = group_regions([location])
+    padded = group_regions([location], query_padding_km=2)
+    assert len(original) == len(padded) == 2
+    assert {region.key for region in original} == {region.key for region in padded}
+    original_by_key = {region.key: region for region in original}
+    for region in padded:
+        before = original_by_key[region.key]
+        assert region.north > before.north
+        assert region.south < before.south
+        assert region.east > before.east
+        assert region.west < before.west
+
+
 def test_duplicate_regional_results_keep_newest():
     now = datetime.now(timezone.utc)
     old = NormalizedFlight("x", "p", 1, 1, now)

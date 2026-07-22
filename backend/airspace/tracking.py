@@ -74,6 +74,17 @@ class TrackingService:
                 )
             )
         }
+        active_by_flight: dict[tuple[str, str], Sighting] = {}
+        existing_sightings = db.scalars(
+            select(Sighting)
+            .where(
+                Sighting.location_id.in_(successful_location_ids),
+                Sighting.state.in_(VISIBLE_STATES | {FlightState.held.value}),
+            )
+            .order_by(Sighting.first_detected_at.desc())
+        ).all()
+        for sighting in existing_sightings:
+            active_by_flight.setdefault((sighting.location_id, sighting.flight_id), sighting)
         for location_id, flights in flights_by_location.items():
             location = locations.get(location_id)
             if location is None:
@@ -82,16 +93,7 @@ class TrackingService:
                 distance = distance_km(
                     location.latitude, location.longitude, flight.latitude, flight.longitude
                 )
-                active = db.scalar(
-                    select(Sighting)
-                    .where(
-                        Sighting.location_id == location.id,
-                        Sighting.flight_id == flight.flight_id,
-                        Sighting.state != FlightState.expired.value,
-                    )
-                    .order_by(Sighting.first_detected_at.desc())
-                    .limit(1)
-                )
+                active = active_by_flight.get((location.id, flight.flight_id))
                 if distance > location.radius_km + MAP_BUFFER_KM or not altitude_matches(
                     flight.altitude_ft,
                     location.minimum_altitude_ft,
@@ -151,6 +153,7 @@ class TrackingService:
                     )
                     db.add(active)
                     db.flush()
+                    active_by_flight[(location.id, flight.flight_id)] = active
                     created.append(active)
                 else:
                     active.last_seen_at = max(

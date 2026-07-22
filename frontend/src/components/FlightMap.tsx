@@ -22,10 +22,41 @@ export function circleCrossingSeconds(
 }
 
 export function mapProjectionSeconds(
-  notificationRadiusKm: number,
-  groundSpeedKnots: number | undefined,
+  location: Pick<Location, "latitude" | "longitude" | "radius_km">,
+  flight: Sighting["flight"],
 ): number {
-  return circleCrossingSeconds(notificationRadiusKm + MAP_BUFFER_KM, groundSpeedKnots);
+  const { latitude, longitude, heading, ground_speed_knots } = flight;
+  if (
+    typeof latitude !== "number" ||
+    typeof longitude !== "number" ||
+    typeof heading !== "number" ||
+    typeof ground_speed_knots !== "number" ||
+    ground_speed_knots <= 0
+  )
+    return 0;
+  const radiusKm = location.radius_km + MAP_BUFFER_KM;
+  const latitudeKm = (latitude - location.latitude) * 111.32;
+  const longitudeKm =
+    (longitude - location.longitude) *
+    111.32 *
+    Math.max(0.1, Math.cos((location.latitude * Math.PI) / 180));
+  const distanceSquared = latitudeKm ** 2 + longitudeKm ** 2;
+  if (distanceSquared > radiusKm ** 2 * (1 + 1e-9)) return 0;
+  const headingRadians = (heading * Math.PI) / 180;
+  const directionEast = Math.sin(headingRadians);
+  const directionNorth = Math.cos(headingRadians);
+  const positionAlongHeading =
+    longitudeKm * directionEast + latitudeKm * directionNorth;
+  const distanceToBoundary =
+    -positionAlongHeading +
+    Math.sqrt(
+      Math.max(
+        0,
+        positionAlongHeading ** 2 + radiusKm ** 2 - distanceSquared,
+      ),
+    );
+  return Math.max(0, distanceToBoundary) /
+    (ground_speed_knots * KNOTS_TO_KM_PER_SECOND);
 }
 
 export function projectedPosition(
@@ -115,7 +146,7 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
     currentSightings.current.forEach((sighting) => {
       const location = locations.find((item) => item.id === sighting.location_id);
       const projectionSeconds = location
-        ? mapProjectionSeconds(location.radius_km, sighting.flight.ground_speed_knots)
+        ? mapProjectionSeconds(location, sighting.flight)
         : 0;
       const position = projectedPosition(sighting.flight, Date.now(), projectionSeconds);
       if (!position) return;

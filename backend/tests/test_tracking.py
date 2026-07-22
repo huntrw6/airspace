@@ -1,7 +1,7 @@
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import create_engine, func, select
+from sqlalchemy import create_engine, event, func, select
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
@@ -186,6 +186,36 @@ def test_saved_directional_settings_no_longer_filter_aircraft():
     TrackingService(120).process_cycle(db, {location.id: [flight(now)]}, {location.id}, now)
     assert db.scalar(select(func.count()).select_from(Sighting)) == 1
     assert db.scalar(select(func.count()).select_from(NotificationDelivery)) == 1
+
+
+def test_outside_aircraft_do_not_create_per_flight_sighting_queries():
+    db = database()
+    location = seed(db)
+    now = datetime.now(timezone.utc)
+    statements: list[str] = []
+
+    def capture_statement(_connection, _cursor, statement, _parameters, _context, _many):
+        statements.append(statement)
+
+    event.listen(db.get_bind(), "before_cursor_execute", capture_statement)
+    flights = [
+        NormalizedFlight(
+            flight_id=f"outside-{index}",
+            provider_flight_id=f"provider-{index}",
+            latitude=location.latitude + 0.2,
+            longitude=location.longitude,
+            altitude_ft=10000,
+            observed_at=now,
+        )
+        for index in range(250)
+    ]
+    TrackingService(120).process_cycle(db, {location.id: flights}, {location.id}, now)
+    sighting_selects = [
+        statement
+        for statement in statements
+        if statement.lstrip().upper().startswith("SELECT") and "FROM sightings" in statement
+    ]
+    assert len(sighting_selects) <= 2
 
 
 def test_quiet_hours_suppress_notification_intent():

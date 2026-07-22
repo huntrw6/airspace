@@ -42,10 +42,11 @@ describe("live aircraft projection", () => {
     expect(markerRotation(270, true)).toBe(0);
   });
 
-  it("stops projecting after the aircraft could cross the buffered map area", () => {
+  it("stops projection at the buffered map boundary from the observed position", () => {
     const observed = "2026-01-01T00:00:00Z";
     const flight = { latitude: 33, longitude: -118, heading: 90, ground_speed_knots: 450, observed_at: observed };
-    const crossingSeconds = mapProjectionSeconds(8, flight.ground_speed_knots);
+    const location = { latitude: 33, longitude: -118, radius_km: 8 };
+    const crossingSeconds = mapProjectionSeconds(location, flight);
     const atCrossing = projectedPosition(
       flight,
       Date.parse(observed) + crossingSeconds * 1000,
@@ -56,9 +57,26 @@ describe("live aircraft projection", () => {
       Date.parse(observed) + 300_000,
       crossingSeconds,
     );
-    expect(crossingSeconds).toBeCloseTo(86.4, 1);
+    expect(crossingSeconds).toBeCloseTo(43.2, 1);
     expect(longAfterCrossing![0]).toBeCloseTo(atCrossing![0], 8);
     expect(longAfterCrossing![1]).toBeCloseTo(atCrossing![1], 8);
+  });
+
+  it("allows a full buffered diameter only when observed at the entry edge", () => {
+    const latitude = 33;
+    const radiusKm = 10;
+    const longitudeDegrees = radiusKm /
+      (111.32 * Math.cos((latitude * Math.PI) / 180));
+    const seconds = mapProjectionSeconds(
+      { latitude, longitude: -118, radius_km: 8 },
+      {
+        latitude,
+        longitude: -118 - longitudeDegrees,
+        heading: 90,
+        ground_speed_knots: 450,
+      },
+    );
+    expect(seconds).toBeCloseTo(86.4, 1);
   });
 
   it("does not project when circle or speed data is unavailable", () => {
