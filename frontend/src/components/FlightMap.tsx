@@ -7,6 +7,13 @@ const KNOTS_TO_KM_PER_SECOND = 0.000514444;
 const MAP_BUFFER_KM = 2;
 export const AIRPLANE_SYMBOL = "✈︎";
 
+export function bufferedViewingBounds(
+  location: Pick<Location, "latitude" | "longitude" | "radius_km">,
+): L.LatLngBounds {
+  const diameterMeters = (location.radius_km + MAP_BUFFER_KM) * 2000;
+  return L.latLng(location.latitude, location.longitude).toBounds(diameterMeters);
+}
+
 export function circleCrossingSeconds(
   radiusKm: number,
   groundSpeedKnots: number | undefined,
@@ -181,10 +188,7 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
         fillColor: "#168ba4",
         fillOpacity: 0.1,
       }).bindTooltip(location.label).addTo(map.current!);
-      const bufferedBounds = L.circle([location.latitude, location.longitude], {
-        radius: (location.radius_km + MAP_BUFFER_KM) * 1000,
-      }).getBounds();
-      viewingBounds.extend(bufferedBounds);
+      viewingBounds.extend(bufferedViewingBounds(location));
     });
     map.current.fitBounds(viewingBounds, { padding: [30, 30] });
     renderAircraft();

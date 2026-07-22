@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import {
   AIRPLANE_SYMBOL,
+  bufferedViewingBounds,
   circleCrossingSeconds,
   isHelicopter,
   mapProjectionSeconds,
@@ -10,6 +11,18 @@ import {
 } from "./FlightMap";
 
 describe("live aircraft projection", () => {
+  it("calculates buffered map bounds without requiring a mounted Leaflet layer", () => {
+    const bounds = bufferedViewingBounds({
+      latitude: 34,
+      longitude: -118,
+      radius_km: 8,
+    });
+
+    expect(bounds.isValid()).toBe(true);
+    expect(bounds.contains([34, -118])).toBe(true);
+    expect(bounds.getNorth() - bounds.getSouth()).toBeGreaterThan(0.17);
+  });
+
   it("moves an eastbound aircraft between provider observations", () => {
     const observed = "2026-01-01T00:00:00Z";
     const result = projectedPosition(
