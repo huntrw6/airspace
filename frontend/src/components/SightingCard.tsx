@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, type AircraftPhoto, type Sighting } from "../api";
+import { isHelicopter } from "./FlightMap";
 
 const photoRequests = new Map<string, Promise<AircraftPhoto | null>>();
 
@@ -34,6 +35,7 @@ export function flightradar24Url(sighting: Sighting): string | null {
 export function SightingCard({ sighting, expanded = false }: { sighting: Sighting; expanded?: boolean }) {
   const flight = sighting.flight;
   const trackerUrl = flightradar24Url(sighting);
+  const aircraftSymbol = isHelicopter(flight.aircraft_type) ? "🚁" : "✈️";
   const [photo, setPhoto] = useState<AircraftPhoto | null>(null);
   useEffect(() => {
     let active = true;
@@ -53,7 +55,7 @@ export function SightingCard({ sighting, expanded = false }: { sighting: Sightin
       </a>
       <figcaption>Photo © {photo.photographer} · Planespotters.net</figcaption>
     </figure>}
-    <h2>{flight.callsign || "Unidentified aircraft"}</h2>
+    <h2>{flight.callsign || "Unidentified aircraft"} {aircraftSymbol}</h2>
     <p>{flight.airline || flight.aircraft_type || "Aircraft details unavailable"}</p>
     <strong>{flight.origin_city || "Unknown origin"} → {flight.destination_city || "Unknown destination"}</strong>
     <p>{sighting.minimum_distance_km.toFixed(1)} km closest · {flight.altitude_ft?.toLocaleString() || "Altitude unavailable"} ft</p>

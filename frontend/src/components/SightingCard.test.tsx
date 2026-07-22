@@ -52,7 +52,22 @@ describe("sighting details", () => {
       first_detected_at: "2026-01-01T00:00:00Z", last_seen_at: "2026-01-01T00:01:00Z",
       minimum_distance_km: 2.25, flight: {},
     }} />);
-    expect(screen.getByText("Unidentified aircraft")).toBeTruthy();
+    expect(screen.getByText("Unidentified aircraft ✈️")).toBeTruthy();
     expect(screen.getByText(/Altitude unavailable/)).toBeTruthy();
+  });
+
+  it("shows the matching aircraft symbol after the flight number", () => {
+    const base = {
+      location_id: "home", state: "visible", first_detected_at: "2026-01-01T00:00:00Z",
+      last_seen_at: "2026-01-01T00:01:00Z", minimum_distance_km: 2.25,
+    };
+    const { rerender } = render(<SightingCard sighting={{
+      ...base, id: "plane", flight: { callsign: "ASA836", aircraft_type: "A330" },
+    }} />);
+    expect(screen.getByText("ASA836 ✈️")).toBeTruthy();
+    rerender(<SightingCard sighting={{
+      ...base, id: "helicopter", flight: { callsign: "LIFE1", aircraft_type: "H145" },
+    }} />);
+    expect(screen.getByText("LIFE1 🚁")).toBeTruthy();
   });
 });
