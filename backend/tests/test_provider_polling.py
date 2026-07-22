@@ -23,17 +23,20 @@ def test_nearby_locations_share_request():
     assert sorted(next(iter(regions.values()))) == ["a", "b"]
 
 
-def test_radius_crossing_cell_boundary_queries_adjacent_cells():
+def test_radius_crossing_cell_boundary_uses_one_covering_request():
     regions = group_regions([LocationPoint("edge", 38.50, -121.50, radius_km=3)])
-    assert len(regions) == 4
-    assert all(ids == ["edge"] for ids in regions.values())
+    assert len(regions) == 1
+    region = next(iter(regions))
+    assert next(iter(regions.values())) == ["edge"]
+    assert region.south < 38.50 < region.north
+    assert region.west < -121.50 < region.east
 
 
 def test_query_padding_expands_bounds_without_adding_regions():
     location = LocationPoint("buffered", 34.0, -117.9125, radius_km=8)
     original = group_regions([location])
     padded = group_regions([location], query_padding_km=2)
-    assert len(original) == len(padded) == 2
+    assert len(original) == len(padded) == 1
     assert {region.key for region in original} == {region.key for region in padded}
     original_by_key = {region.key: region for region in original}
     for region in padded:
