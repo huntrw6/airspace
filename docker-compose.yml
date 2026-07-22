@@ -1,5 +1,6 @@
 services:
   airspace:
+    container_name: airspace
     image: ${AIRSPACE_IMAGE:-ghcr.io/huntrw6/airspace:latest}
     restart: unless-stopped
     environment:
