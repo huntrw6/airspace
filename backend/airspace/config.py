@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     geocoding_cache_seconds: int = Field(86400, ge=60, le=604800)
     vapid_public_key: str | None = None
     vapid_private_key: SecretStr | None = None
-    vapid_subject: str = "mailto:hunter.wegner6@gmail.com"
+    vapid_subject: str = "mailto:admin@example.com"
     push_encryption_key: SecretStr | None = None
     push_max_retries: int = Field(3, ge=1, le=10)
 
