@@ -8,7 +8,7 @@ import { AdminApp } from "./components/AdminApp";
 import { AddressSearch } from "./components/AddressSearch";
 import { SightingCard } from "./components/SightingCard";
 import { AppHeader, type ConnectionState } from "./components/AppHeader";
-import { isLiveSighting } from "./sightings";
+import { isLiveSighting, sortSightingsByCurrentDistance } from "./sightings";
 import "./style.css";
 const presets = {
   "Directly overhead": 1.5,
@@ -371,7 +371,7 @@ function App() {
       </main>
     );
   }
-  const nearby = sightings.filter(isLiveSighting);
+  const nearby = sortSightingsByCurrentDistance(sightings.filter(isLiveSighting));
   const selectedSighting = new URLSearchParams(location.search).get("sighting");
   const history = sightings.filter((s) => s.state !== "held" && !isLiveSighting(s));
   return (

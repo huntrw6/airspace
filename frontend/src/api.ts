@@ -39,6 +39,7 @@ export type Sighting = {
     heading?: number;
     ground_speed_knots?: number;
     observed_at?: string;
+    distance_km?: number;
   };
 };
 export type AircraftPhoto = {
