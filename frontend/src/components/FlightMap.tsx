@@ -140,6 +140,22 @@ function aircraftIcon(heading?: number, aircraftType?: string): L.DivIcon {
   });
 }
 
+function radarOverlayElement(content: string): SVGSVGElement {
+  const element = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  element.setAttribute("viewBox", "0 0 100 100");
+  element.setAttribute("preserveAspectRatio", "none");
+  element.setAttribute("aria-hidden", "true");
+  element.classList.add("radar-sweep-overlay");
+  element.innerHTML = content;
+  return element;
+}
+
+function radarRangeElement(): SVGSVGElement {
+  return radarOverlayElement(`
+    <circle class="radar-range-ring" cx="50" cy="50" r="16.67" />
+    <circle class="radar-range-ring" cx="50" cy="50" r="33.33" />`);
+}
+
 function radarSweepElement(): SVGSVGElement {
   const trailSegments = Array.from({ length: 24 }, (_, index) => {
     const startAngle = -60 + index * 2.5;
@@ -156,20 +172,12 @@ function radarSweepElement(): SVGSVGElement {
     return `<path class="radar-trail" style="opacity:${opacity.toFixed(3)}" d="M50 50 L${startX.toFixed(2)} ${startY.toFixed(2)} A50 50 0 0 1 ${endX.toFixed(2)} ${endY.toFixed(2)} Z" />`;
   }).join("");
 
-  const element = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  element.setAttribute("viewBox", "0 0 100 100");
-  element.setAttribute("preserveAspectRatio", "none");
-  element.setAttribute("aria-hidden", "true");
-  element.classList.add("radar-sweep-overlay");
-  element.innerHTML = `
-    <circle class="radar-range-ring" cx="50" cy="50" r="16.67" />
-    <circle class="radar-range-ring" cx="50" cy="50" r="33.33" />
+  return radarOverlayElement(`
     <circle class="radar-center-dot" cx="50" cy="50" r="1.25" />
     <g class="radar-sweep-vector">
       ${trailSegments}
       <line class="radar-beam" x1="50" y1="50" x2="50" y2="0" />
-    </g>`;
-  return element;
+    </g>`);
 }
 
 export function FlightMap({ locations, sightings }: { locations: Location[]; sightings: Sighting[] }) {
@@ -229,9 +237,13 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
       maxZoom: 20,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map.current);
-    const radarPane = map.current.createPane("radarPane");
-    radarPane.style.zIndex = "450";
-    radarPane.style.pointerEvents = "none";
+    const radarRangePane = map.current.createPane("radarRangePane");
+    radarRangePane.style.zIndex = "450";
+    radarRangePane.style.pointerEvents = "none";
+    map.current.getPane("markerPane")!.style.zIndex = "500";
+    const radarSweepPane = map.current.createPane("radarSweepPane");
+    radarSweepPane.style.zIndex = "550";
+    radarSweepPane.style.pointerEvents = "none";
     const viewingBounds = L.latLngBounds([]);
     locations.forEach((location) => {
       const circle = L.circle([location.latitude, location.longitude], {
@@ -240,8 +252,12 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
         fillColor: "#168ba4",
         fillOpacity: 0.1,
       }).addTo(map.current!);
+      L.svgOverlay(radarRangeElement(), circle.getBounds(), {
+        pane: "radarRangePane",
+        interactive: false,
+      }).addTo(map.current!);
       L.svgOverlay(radarSweepElement(), circle.getBounds(), {
-        pane: "radarPane",
+        pane: "radarSweepPane",
         interactive: false,
       }).addTo(map.current!);
       viewingBounds.extend(circle.getBounds());
