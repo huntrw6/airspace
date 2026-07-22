@@ -8,29 +8,11 @@ from pywebpush import WebPushException, webpush  # type: ignore[import-untyped]
 from sqlalchemy import select
 
 from .config import Settings
+from .aircraft import aircraft_kind
 from .aircraft_photos import AircraftPhotoService
 from .database import SessionLocal, utcnow
 from .models import NotificationDelivery, PushSubscription, Sighting
 from .subscriptions import decrypt_subscription
-
-HELICOPTER_CODES = {
-    "R22", "R44", "R66", "B06", "B212", "B412", "B427", "B429", "EC20", "EC25",
-    "EC30", "EC35", "EC45", "EC55", "H125", "H130", "H135", "H145", "H160", "H175",
-    "H225", "AS32", "AS50", "AS55", "AS65", "S61", "S64", "S65", "S70", "S76", "S92",
-    "A109", "A119", "A139", "A149", "A169", "A189", "MI2", "MI6", "MI8", "MI24",
-    "MI26", "KA27", "KA29", "KA31", "KA32", "UH1", "H60", "CH47", "AH64", "V22",
-}
-
-
-def is_helicopter(aircraft_type: object) -> bool:
-    if not isinstance(aircraft_type, str):
-        return False
-    normalized = aircraft_type.strip().upper()
-    return normalized in HELICOPTER_CODES or any(
-        description in normalized
-        for description in ("HELICOPTER", "ROTORCRAFT", "ROTOR CRAFT")
-    )
-
 
 def in_quiet_hours(quiet_hours: dict | None, timezone_name: str, now: datetime) -> bool:
     if not quiet_hours or not quiet_hours.get("enabled", True):
@@ -60,7 +42,10 @@ def notification_payload(
     origin = flight.get("origin_city") or "an unknown origin"
     destination = flight.get("destination_city") or "an unknown destination"
     altitude = flight.get("altitude_ft")
-    aircraft_symbol = "🚁" if is_helicopter(flight.get("aircraft_type")) else "✈️"
+    kind = aircraft_kind(flight.get("aircraft_type_code"), flight.get("aircraft_type"))
+    if flight.get("aircraft_kind") == "helicopter":
+        kind = "helicopter"
+    aircraft_symbol = "🚁" if kind == "helicopter" else "✈️"
     flight_name = " ".join(value for value in (airline, callsign) if value)
     altitude_text = f" at {altitude:,.0f} feet" if isinstance(altitude, (int, float)) else ""
     payload = {

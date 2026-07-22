@@ -32,6 +32,8 @@ export type Sighting = {
     origin_city?: string;
     destination_city?: string;
     aircraft_type?: string;
+    aircraft_type_code?: string;
+    aircraft_kind?: "plane" | "helicopter";
     registration?: string;
     altitude_ft?: number;
     heading?: number;

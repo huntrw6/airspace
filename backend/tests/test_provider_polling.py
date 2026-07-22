@@ -91,6 +91,14 @@ def test_fr24_positional_payload_is_centralized_and_typed():
     assert parsed.latitude == 0 and parsed.longitude == 0
     assert parsed.altitude_ft == 8500 and parsed.callsign == "WN123"
     assert parsed.registration == "N123"
+    assert parsed.aircraft_type_code == "B738" and parsed.aircraft_kind == "plane"
+
+
+def test_fr24_feed_classifies_icao_helicopter_code():
+    record = ["heli", 1, 2, 90, 1200, 110, "", "radar", "B407", "N407AB", 1_700_000_000]
+    parsed = parse_fr24_feed_item("provider-heli", record)
+    assert parsed.aircraft_type_code == "B407"
+    assert parsed.aircraft_kind == "helicopter"
 
 
 def test_details_handle_missing_fields_without_erasing_position():
@@ -103,6 +111,26 @@ def test_details_capture_aircraft_registration():
     base = NormalizedFlight("x", "p", 1, 2, datetime.now(timezone.utc))
     merged = merge_fr24_details(base, {"aircraft": {"registration": "N62889"}})
     assert merged.registration == "N62889"
+
+
+def test_details_preserve_icao_code_separately_from_model_text():
+    base = NormalizedFlight(
+        "x",
+        "p",
+        1,
+        2,
+        datetime.now(timezone.utc),
+        aircraft_type="B407",
+        aircraft_type_code="B407",
+        aircraft_kind="helicopter",
+    )
+    merged = merge_fr24_details(
+        base,
+        {"aircraft": {"model": {"code": "B407", "text": "Bell 407"}}},
+    )
+    assert merged.aircraft_type == "Bell 407"
+    assert merged.aircraft_type_code == "B407"
+    assert merged.aircraft_kind == "helicopter"
 
 
 @pytest.mark.asyncio

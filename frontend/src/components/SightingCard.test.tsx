@@ -62,11 +62,11 @@ describe("sighting details", () => {
       last_seen_at: "2026-01-01T00:01:00Z", minimum_distance_km: 2.25,
     };
     const { rerender } = render(<SightingCard sighting={{
-      ...base, id: "plane", flight: { callsign: "ASA836", aircraft_type: "A330" },
+      ...base, id: "plane", flight: { callsign: "ASA836", aircraft_kind: "plane" },
     }} />);
     expect(screen.getByText("ASA836 ✈️")).toBeTruthy();
     rerender(<SightingCard sighting={{
-      ...base, id: "helicopter", flight: { callsign: "LIFE1", aircraft_type: "H145" },
+      ...base, id: "helicopter", flight: { callsign: "LIFE1", aircraft_kind: "helicopter" },
     }} />);
     expect(screen.getByText("LIFE1 🚁")).toBeTruthy();
   });
