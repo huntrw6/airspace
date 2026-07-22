@@ -360,7 +360,9 @@ summary {
 }
 .radar-center-dot {
   fill: #a9f3ff;
-  opacity: 0.78;
+  stroke: #a9f3ff;
+  stroke-width: 0.5;
+  opacity: 1;
   filter: drop-shadow(0 0 1.2px #5ed2e8);
 }
 .radar-sweep-vector {
