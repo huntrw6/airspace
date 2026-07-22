@@ -253,6 +253,10 @@ summary {
   transform-origin: center;
   transition: transform 250ms ease;
 }
+.aircraft-marker .airplane-symbol {
+  font-family: Arial, Helvetica, sans-serif;
+  font-variant-emoji: text;
+}
 @media (max-width: 550px) {
   .status {
     font-size: 0.68rem;

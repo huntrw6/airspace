@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 import {
+  AIRPLANE_SYMBOL,
   circleCrossingSeconds,
   isHelicopter,
   markerRotation,
@@ -25,6 +26,10 @@ describe("live aircraft projection", () => {
   });
 
   it("uses the east-facing plane emoji as the rotation baseline", () => {
+    expect([...AIRPLANE_SYMBOL].map((character) => character.codePointAt(0))).toEqual([
+      0x2708,
+      0xfe0e,
+    ]);
     expect(markerRotation(90, false)).toBe(0);
     expect(markerRotation(0, false)).toBe(-90);
   });

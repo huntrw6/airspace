@@ -4,6 +4,7 @@ import type { Location, Sighting } from "../api";
 
 const EARTH_RADIUS_KM = 6371;
 const KNOTS_TO_KM_PER_SECOND = 0.000514444;
+export const AIRPLANE_SYMBOL = "✈︎";
 
 export function circleCrossingSeconds(
   radiusKm: number,
@@ -81,7 +82,7 @@ function aircraftIcon(heading?: number, aircraftType?: string): L.DivIcon {
   const rotation = markerRotation(heading, helicopter);
   return L.divIcon({
     className: "aircraft-marker",
-    html: `<span style="transform:rotate(${rotation}deg)">${helicopter ? "🚁" : "✈"}</span>`,
+    html: `<span class="${helicopter ? "helicopter-symbol" : "airplane-symbol"}" style="transform:rotate(${rotation}deg)">${helicopter ? "🚁" : AIRPLANE_SYMBOL}</span>`,
     iconSize: [34, 34],
     iconAnchor: [17, 17],
   });
