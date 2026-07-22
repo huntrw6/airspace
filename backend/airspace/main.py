@@ -432,6 +432,7 @@ def sightings(profile: Profile = Depends(current_profile), db: Session = Depends
         {
             "id": r.id,
             "location_id": r.location_id,
+            "provider_flight_id": r.provider_flight_id,
             "state": r.state,
             "first_detected_at": r.first_detected_at,
             "last_seen_at": r.last_seen_at,
@@ -462,6 +463,7 @@ def events(profile: Profile = Depends(current_profile)):
                         {
                             "id": row.id,
                             "location_id": row.location_id,
+                            "provider_flight_id": row.provider_flight_id,
                             "state": row.state,
                             "first_detected_at": row.first_detected_at.isoformat(),
                             "last_seen_at": row.last_seen_at.isoformat(),

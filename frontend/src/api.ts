@@ -19,6 +19,7 @@ export type Location = {
 export type Sighting = {
   id: string;
   location_id: string;
+  provider_flight_id?: string | null;
   state: string;
   first_detected_at: string;
   last_seen_at: string;
