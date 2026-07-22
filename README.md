@@ -1,15 +1,16 @@
 # AirSpace
 
-AirSpace is a friendly, self-hosted flight tracker. Choose a spot and a radius, watch nearby
-aircraft on a live radar-style map, and receive browser notifications when something enters your
+AirSpace is a friendly, self-hosted flight tracker. Choose a radius qnd watch nearby
+aircraft on a live radar-style map, receiving browser notifications when something enters your
 airspace.
 
-- Live aircraft map with plane and helicopter markers
-- Browser push notifications—no email service required
-- Aircraft details, photos, routes, and Flightradar24 links
+- Responsive Progressive Web App for desktop, Android, iPhone, and iPad
+- Live aircraft map with markers for planes and helicopters
+- Browser push notifications—no text or email service required
+- Aircraft details, photos, routes, and links to Flightradar24
 - Private, anonymous browser profiles with no accounts or passwords
-- Responsive PWA for desktop, Android, iPhone, and iPad
 - Multi-architecture Docker images for AMD64 and ARM64
+
 
 > AirSpace uses unofficial FlightRadar24 endpoints. They may occasionally change, throttle, or
 > become unavailable.
