@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { api, Profile, type Sighting } from "./api";
 import { MapPicker } from "./components/MapPicker";
@@ -15,6 +15,8 @@ const presets = {
   Nearby: 8,
   "Wider area": 20,
 };
+const HEALTH_CHECK_INTERVAL_MS = 15_000;
+const DISCONNECTED_AFTER_FAILURES = 3;
 function needsIosInstallation(): boolean {
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const legacyStandalone = Boolean(
@@ -38,19 +40,45 @@ function App() {
     [radius, setRadius] = useState(8),
     [adding, setAdding] = useState(false),
     [status, setStatus] = useState("not_configured"),
+    [connectionState, setConnectionState] = useState<"checking" | "live" | "disconnected">("checking"),
     [sightings, setSightings] = useState<Sighting[]>([]);
+  const failedHealthChecks = useRef(0);
   useEffect(() => {
     api
       .profile()
       .then(setProfile)
       .catch(() => {})
       .finally(() => setLoading(false));
-    api
-      .status()
-      .then((s) => setStatus(s.provider))
-      .catch(() => {});
     if ("serviceWorker" in navigator)
       navigator.serviceWorker.register("/sw.js");
+  }, []);
+  useEffect(() => {
+    let active = true;
+    const recordFailure = () => {
+      failedHealthChecks.current += 1;
+      if (failedHealthChecks.current >= DISCONNECTED_AFTER_FAILURES)
+        setConnectionState("disconnected");
+    };
+    const checkHealth = () => {
+      void api.status().then((next) => {
+        if (!active) return;
+        setStatus(next.provider);
+        if (next.provider === "healthy") {
+          failedHealthChecks.current = 0;
+          setConnectionState("live");
+        } else {
+          recordFailure();
+        }
+      }).catch(() => {
+        if (active) recordFailure();
+      });
+    };
+    checkHealth();
+    const timer = window.setInterval(checkHealth, HEALTH_CHECK_INTERVAL_MS);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
   }, []);
   useEffect(() => {
     if (profile)
@@ -354,19 +382,13 @@ function App() {
   return (
     <main>
       <header>
-        <span className="brand">AirSpace</span>
-        <span className="status">
-          ● {status === "healthy" ? "Tracking live" : "Data " + status}
+        <span className="brand">YOUR AIRSPACE</span>
+        <span className={`status status-${connectionState}`} role="status">
+          ● {connectionState === "disconnected" ? "DISCONNECTED" : connectionState === "live" ? "LIVE" : "CONNECTING"}
         </span>
       </header>
-      <section>
-        <p className="eyebrow">YOUR AIRSPACE</p>
+      <section className="dashboard-section">
         <h1>{nearby.length ? "A plane is nearby" : "The sky is quiet"}</h1>
-        <p>
-          {nearby.length
-            ? "Here’s what’s passing your viewing spot right now."
-            : "We’re watching your circle and you'll get a notification when something is overhead"}
-        </p>
         <FlightMap locations={profile.locations} sightings={nearby} />
         <div className="grid">
           {nearby.map((s) => (

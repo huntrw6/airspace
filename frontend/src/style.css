@@ -33,12 +33,24 @@ header {
 }
 .status {
   font-size: 0.82rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
   color: #8ee8c1;
+}
+.status-live {
+  color: #ff5c57;
+}
+.status-checking,
+.status-disconnected {
+  color: #f2c14e;
 }
 .hero,
 main > section {
   padding-top: clamp(50px, 10vh, 110px);
   max-width: 900px;
+}
+.dashboard-section {
+  padding-top: clamp(24px, 4vh, 44px);
 }
 .eyebrow {
   color: #5ed2e8;
@@ -131,15 +143,36 @@ input:focus-visible {
 }
 .grid {
   display: grid;
-  gap: 18px;
+  gap: 12px;
 }
 .flight {
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
   background: #0b2942;
   color: #f4f9fc;
   border: 1px solid #28506b;
-  border-radius: 20px;
-  padding: 24px;
+  border-radius: 17px;
+  padding: 18px 20px;
+  line-height: 1.35;
   box-shadow: 0 14px 36px #020b1266;
+}
+.flight h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.55rem;
+  line-height: 1.1;
+}
+.flight p {
+  margin: 0.3rem 0;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+.flight strong {
+  display: block;
+  margin: 0.4rem 0;
+}
+.flight small {
+  display: block;
+  margin-top: 0.4rem;
+  line-height: 1.35;
 }
 .flight p,
 .flight small {
