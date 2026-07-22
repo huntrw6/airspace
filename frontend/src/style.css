@@ -151,6 +151,30 @@ input:focus-visible {
 .flight a:visited {
   color: #b6c8ff;
 }
+.aircraft-photo {
+  float: right;
+  width: min(42%, 280px);
+  margin: 0 0 18px 22px;
+}
+.aircraft-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+  border: 1px solid #ffffff24;
+  border-radius: 13px;
+}
+.aircraft-photo figcaption {
+  margin-top: 6px;
+  color: #a9c0cf;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+.flight::after {
+  display: block;
+  clear: both;
+  content: "";
+}
 .danger {
   background: #d14f4f;
   color: white;
@@ -311,6 +335,11 @@ summary {
   }
 }
 @media (max-width: 550px) {
+  .aircraft-photo {
+    float: none;
+    width: 100%;
+    margin: 0 0 18px;
+  }
   .status {
     font-size: 0.68rem;
   }

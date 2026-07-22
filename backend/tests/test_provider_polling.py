@@ -90,12 +90,19 @@ def test_fr24_positional_payload_is_centralized_and_typed():
     parsed = parse_fr24_feed_item("provider-id", record)
     assert parsed.latitude == 0 and parsed.longitude == 0
     assert parsed.altitude_ft == 8500 and parsed.callsign == "WN123"
+    assert parsed.registration == "N123"
 
 
 def test_details_handle_missing_fields_without_erasing_position():
     base = NormalizedFlight("x", "p", 1, 2, datetime.now(timezone.utc), callsign="X1")
     merged = merge_fr24_details(base, {"airline": {"name": "Example Air"}})
     assert merged.latitude == 1 and merged.callsign == "X1" and merged.airline == "Example Air"
+
+
+def test_details_capture_aircraft_registration():
+    base = NormalizedFlight("x", "p", 1, 2, datetime.now(timezone.utc))
+    merged = merge_fr24_details(base, {"aircraft": {"registration": "N62889"}})
+    assert merged.registration == "N62889"
 
 
 @pytest.mark.asyncio

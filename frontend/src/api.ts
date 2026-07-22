@@ -32,11 +32,17 @@ export type Sighting = {
     origin_city?: string;
     destination_city?: string;
     aircraft_type?: string;
+    registration?: string;
     altitude_ft?: number;
     heading?: number;
     ground_speed_knots?: number;
     observed_at?: string;
   };
+};
+export type AircraftPhoto = {
+  thumbnail_url: string;
+  page_url: string;
+  photographer: string;
 };
 export type Profile = {
   timezone: string;
@@ -104,6 +110,10 @@ export const api = {
   deleteProfile: () => request<void>("/api/profile", { method: "DELETE" }),
   status: () => request<{ provider: string }>("/api/status"),
   sightings: () => request<Sighting[]>("/api/sightings"),
+  aircraftPhoto: (registration: string) =>
+    request<{ photo: AircraftPhoto | null }>(
+      `/api/aircraft-photos/${encodeURIComponent(registration)}`,
+    ),
   searchAddresses: (query: string) =>
     request<AddressResult[]>(
       `/api/geocoding/search?q=${encodeURIComponent(query)}`,

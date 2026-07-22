@@ -41,6 +41,7 @@ from .retention import RetentionWorker, cleanup_once
 from .geocoding import Geocoder
 from .rate_limit import SlidingWindowLimiter, privacy_key
 from .origin import origin_is_allowed
+from .aircraft_photos import AircraftPhotoService
 
 polling_worker: PollingWorker | None = None
 polling_task: asyncio.Task | None = None
@@ -48,18 +49,20 @@ retention_worker: RetentionWorker | None = None
 retention_task: asyncio.Task | None = None
 rate_limiter = SlidingWindowLimiter()
 geocoder: Geocoder | None = None
+aircraft_photos: AircraftPhotoService | None = None
 logger = logging.getLogger("airspace.push")
 logger.setLevel(logging.WARNING)
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    global polling_worker, polling_task, retention_worker, retention_task, geocoder
+    global polling_worker, polling_task, retention_worker, retention_task, geocoder, aircraft_photos
     upgrade_database()
     # Alembic's fileConfig can disable application loggers while configuring migration output.
     logger.disabled = False
     settings = get_settings()
     geocoder = Geocoder(settings)
+    aircraft_photos = AircraftPhotoService(settings)
     provider = None
     if settings.provider_enabled:
         polling_worker, provider = build_worker(settings)
@@ -81,6 +84,8 @@ async def lifespan(_: FastAPI):
             await asyncio.gather(retention_task, return_exceptions=True)
         if provider:
             await provider.close()
+        if aircraft_photos:
+            await aircraft_photos.close()
 
 
 app = FastAPI(title="AirSpace API", version=__version__, lifespan=lifespan)
@@ -142,7 +147,7 @@ async def security_headers(request, call_next):
             "X-Frame-Options": "DENY",
             "Referrer-Policy": "strict-origin-when-cross-origin",
             "Permissions-Policy": "camera=(), microphone=(), geolocation=(self)",
-            "Content-Security-Policy": "default-src 'self'; img-src 'self' data: https://*.basemaps.cartocdn.com; connect-src 'self'; style-src 'self' 'unsafe-inline'",
+            "Content-Security-Policy": "default-src 'self'; img-src 'self' data: https://*.basemaps.cartocdn.com https://t.plnspttrs.net; connect-src 'self'; style-src 'self' 'unsafe-inline'",
         }
     )
     return response
@@ -163,6 +168,21 @@ async def search_addresses(
             status_code=502, detail="Address search is temporarily unavailable."
         ) from error
     return [result.__dict__ for result in results]
+
+
+@app.get("/api/aircraft-photos/{registration}")
+async def aircraft_photo(
+    registration: str,
+    _: Profile = Depends(current_profile),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    if not settings.aircraft_photos_enabled or aircraft_photos is None:
+        return {"photo": None}
+    try:
+        photo = await aircraft_photos.lookup(registration)
+    except (httpx.HTTPError, ValueError):
+        return {"photo": None}
+    return {"photo": photo.__dict__ if photo else None}
 
 
 @app.get("/health/live")

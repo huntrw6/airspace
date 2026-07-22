@@ -1,9 +1,30 @@
 // @vitest-environment jsdom
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { api } from "../api";
 import { compassHeading, flightradar24Url, SightingCard } from "./SightingCard";
 
 describe("sighting details", () => {
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
+
+  it("shows an attributed aircraft photo when a registration is available", async () => {
+    vi.spyOn(api, "aircraftPhoto").mockResolvedValue({ photo: {
+      thumbnail_url: "https://t.plnspttrs.net/photo.jpg",
+      page_url: "https://www.planespotters.net/photo/123/example",
+      photographer: "Example Photographer",
+    }});
+    render(<SightingCard sighting={{
+      id: "photo", location_id: "home", state: "visible",
+      first_detected_at: "2026-01-01T00:00:00Z", last_seen_at: "2026-01-01T00:01:00Z",
+      minimum_distance_km: 2.25, flight: { registration: "N62889" },
+    }} />);
+    expect(await screen.findByAltText("N62889 aircraft")).toBeTruthy();
+    expect(screen.getByText(/Example Photographer/)).toBeTruthy();
+  });
+
   it("links an FR24 sighting to its exact live flight", () => {
     expect(flightradar24Url({
       id: "one", location_id: "home", provider_flight_id: "3ABC123", state: "visible",

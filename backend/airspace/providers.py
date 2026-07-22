@@ -33,6 +33,7 @@ class NormalizedFlight:
     origin_city: str | None = None
     destination_city: str | None = None
     aircraft_type: str | None = None
+    registration: str | None = None
 
 
 class FlightProvider(Protocol):
@@ -138,6 +139,7 @@ def parse_fr24_feed_item(
         origin_city=string(11),
         destination_city=string(12),
         airline=string(18),
+        registration=string(9),
     )
 
 
@@ -155,6 +157,7 @@ def merge_fr24_details(flight: NormalizedFlight, payload: Any) -> NormalizedFlig
     callsign = _deep_get(payload, "identification", "callsign") or flight.callsign
     airline = _deep_get(payload, "airline", "name") or flight.airline
     aircraft_type = _deep_get(payload, "aircraft", "model", "text") or flight.aircraft_type
+    registration = _deep_get(payload, "aircraft", "registration") or flight.registration
     origin = _deep_get(payload, "airport", "origin", "position", "region", "city")
     destination = _deep_get(payload, "airport", "destination", "position", "region", "city")
     return NormalizedFlight(
@@ -164,6 +167,9 @@ def merge_fr24_details(flight: NormalizedFlight, payload: Any) -> NormalizedFlig
             "airline": str(airline).strip() or None if airline is not None else None,
             "aircraft_type": str(aircraft_type).strip() or None
             if aircraft_type is not None
+            else None,
+            "registration": str(registration).strip() or None
+            if registration is not None
             else None,
             "origin_city": str(origin).strip() or None
             if origin is not None

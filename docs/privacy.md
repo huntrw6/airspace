@@ -7,3 +7,8 @@ advertising, CAPTCHA, or recovery system. Users can delete individual locations 
 Retention defaults to 60 days for sightings. An idempotent background job removes expired history,
 old permanently invalid subscriptions, and abandoned profiles according to administrator settings.
 The administrator console shows aggregate counts and grid-region keys, never exact home coordinates.
+
+When aircraft photos are enabled, the server sends only the public aircraft registration to the
+Planespotters.net photo API. A browser displaying a returned thumbnail connects to the
+Planespotters.net image host and therefore discloses its IP address to that service. Viewing
+coordinates, profile identifiers, and push subscription data are never included in photo requests.

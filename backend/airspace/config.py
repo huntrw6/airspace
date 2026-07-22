@@ -38,6 +38,13 @@ class Settings(BaseSettings):
     geocoding_user_agent: str = "AirSpace/0.1 (self-hosted flight tracker)"
     geocoding_timeout_seconds: float = Field(8, ge=2, le=30)
     geocoding_cache_seconds: int = Field(86400, ge=60, le=604800)
+    aircraft_photos_enabled: bool = True
+    aircraft_photos_base_url: str = "https://api.planespotters.net"
+    aircraft_photos_user_agent: str = (
+        "AirSpace/0.1 (+https://github.com/huntrw6/airspace)"
+    )
+    aircraft_photos_timeout_seconds: float = Field(8, ge=2, le=30)
+    aircraft_photos_cache_seconds: int = Field(86400, ge=300, le=604800)
     vapid_public_key: str | None = None
     vapid_private_key: SecretStr | None = None
     vapid_subject: str = "mailto:admin@example.com"
