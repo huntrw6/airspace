@@ -123,6 +123,12 @@ export function markerRotation(heading: number | undefined, helicopter: boolean)
   return Number.isFinite(heading) ? Number(heading) - baseline : -baseline;
 }
 
+export function flightMarkerLabel(flight: Sighting["flight"]): string {
+  const airline = flight.airline?.trim();
+  const callsign = flight.callsign?.trim();
+  return [airline, callsign].filter(Boolean).join(" ") || "Unidentified aircraft";
+}
+
 function aircraftIcon(heading?: number, aircraftType?: string): L.DivIcon {
   const helicopter = isHelicopter(aircraftType);
   const rotation = markerRotation(heading, helicopter);
@@ -168,17 +174,19 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
         : 0;
       const position = projectedPosition(sighting.flight, Date.now(), projectionSeconds);
       if (!position) return;
+      const label = flightMarkerLabel(sighting.flight);
       let marker = markers.current.get(sighting.id);
       if (!marker) {
         marker = L.marker(position, {
           icon: aircraftIcon(sighting.flight.heading, sighting.flight.aircraft_type),
         })
-          .bindTooltip(sighting.flight.callsign || "Unidentified aircraft")
+          .bindTooltip(label, { direction: "right", offset: [12, 0] })
           .addTo(map.current!);
         markers.current.set(sighting.id, marker);
       } else {
         marker.setLatLng(position);
         marker.setIcon(aircraftIcon(sighting.flight.heading, sighting.flight.aircraft_type));
+        marker.setTooltipContent(label);
       }
     });
   }

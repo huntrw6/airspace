@@ -4,6 +4,7 @@ import {
   AIRPLANE_SYMBOL,
   bufferedViewingBounds,
   circleCrossingSeconds,
+  flightMarkerLabel,
   isHelicopter,
   mapProjectionSeconds,
   markerRotation,
@@ -11,6 +12,15 @@ import {
 } from "./FlightMap";
 
 describe("live aircraft projection", () => {
+  it("labels aircraft markers with the airline and callsign", () => {
+    expect(flightMarkerLabel({
+      airline: "Hawaiian Airlines",
+      callsign: "ASA836",
+    })).toBe("Hawaiian Airlines ASA836");
+    expect(flightMarkerLabel({ callsign: "N123AB" })).toBe("N123AB");
+    expect(flightMarkerLabel({})).toBe("Unidentified aircraft");
+  });
+
   it("calculates buffered map bounds without requiring a mounted Leaflet layer", () => {
     const bounds = bufferedViewingBounds({
       latitude: 34,
