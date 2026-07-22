@@ -1,302 +1,140 @@
-# What's that plane?!
-A Home Assistant integration made for my partner who enjoys looking up flight information, specifically for planes that pass by her office window.
+# Airspace
 
-The unique part about this integration is that it will simulate a cone of vision in a specified direction and only report back flight information within the FOV. This cone of vision acts as the filter for returned flight information rather than an entire circle radius from the defined home position (though this is also still possible by setting your FOV cone to 360°).
+Airspace is a private-by-design web app that tells ordinary people which aircraft are near a
+chosen home or viewing spot. It runs independently of Home Assistant and supports multiple
+anonymous browser profiles, each with private locations and preferences.
 
-Once dialled in, you or your partner can also scream **"WHAT'S THAT PLANE?!"** every time a plane passes by and view a bunch of interesting stats while it's in line of sight. This can quickly become out of hand and you may start collecting sightings of planes' shiny custom livery variants.
+> Early standalone release: profile/location APIs, onboarding PWA, persistence, geographic
+> filtering, shared regional polling, persisted tracking, health/admin boundaries, Docker
+> packaging, encrypted Web Push delivery, and automated tests are implemented. See **Current
+> limitations** for the remaining production work.
 
-The flight data is pulled using the unofficial SDK for FlightRadar24; [FlightRadarAPI](https://github.com/JeanExtreme002/FlightRadarAPI).
+## Docker quick start
 
-The exposed sensor information can be used to create interesting dashboard cards such as the example markdown card below:
-
-![Example card](https://raw.githubusercontent.com/8bither0/whats-that-plane/main/example.jpg)
-
-See [Adding visible flight information card to your dashboard](#Adding-visible-flight-information-card-to-your-dashboard) below for the template code to add this card to your own dashboard.
-
-## Installation
-### HACS via link (Recommended)
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=8bither0&repository=whats-that-plane&category=integration)
-1. Click the button above to open the integration in Home Assistant Community Store in Home Assistant.
-2. Click `Add`.
-3. Click the `Download` button in the bottom right corner.
-4. Restart Home Assistant.
-5. Now go to your Home Assistant settings and click on `Devices & services`.
-6. Click the `Add Integration` button in the bottom right corner and search for `What's that plane?!`.
-7. Select `What's that plane?!` and move onto the [Configuration](#Configuration) section.
-
-### HACS via custom repositories
-1. Go to the Home Assistant Community Store in Home Assistant.
-2. Click on the kebab icon in the top right corner and choose `Custom repositories`.
-3. In the `Repository` field, enter `https://github.com/8bither0/whats-that-plane` and select `Integration` as the `Type`.
-4. Click `Add` then close `Custom repositories`.
-5. If you now search HACS for `What's that plane?!` you should see the integration in the repository list. Click on the `What's that plane?!` integration.
-6. Click the `Download` button in the bottom right corner.
-7. Restart Home Assistant.
-8. Now go to your Home Assistant settings and click on `Devices & services`.
-9. Click the `Add Integration` button in the bottom right corner and search for `What's that plane?!`.
-10. Select `What's that plane?!` and move onto the [Configuration](#Configuration) section.
-
-### Manual
-1. Clone this repository to your local machine.
-2. Copy the `custom_components/whats_that_plane` directory to the `custom_components` directory in your Home Assistant file system.
-3. Restart Home Assistant.
-4. Now go to your Home Assistant settings and click on `Devices & services`.
-5. Click the `Add Integration` button in the bottom right corner and search for `What's that plane?!`.
-6. Select `What's that plane?!` and move onto the [Configuration](#Configuration) section.
-
-## Configuration
-To initially configure the integration, define the information below. This can be reconfigured via configuration entry options after initial setup:
-
-| Option                              | Required | Example value                     | Description |
-| :-------------------                | :------: | :-----------:                     | :---------- |
-| `location_name`                     | ❌       | `Home`                            | A friendly name for your defined coordinates. This will be appended to the integration entry in the format `Visible Flights (Home)`. If empty, the integration entry will simply be called `Visible Flights`. This is useful when defining multiple entries. |
-| `latitude`                          | ✅       | `51.5285262`                      | The latitude of your viewing location. This will default to the coordinates defined in your [homeassistant.local:8123/config/zone](http://homeassistant.local:8123/config/zone). |
-| `longitude`                         | ✅       | `-0.2663999`                      | The longitude of your viewing location. This will default to the coordinates defined in your [homeassistant.local:8123/config/zone](http://homeassistant.local:8123/config/zone). |
-| `radius_km`                         | ✅       | `5`                               | The radius distance boundary from your current location. e.g. `5` = 5km |
-| `facing_direction`                  | ✅       | `0`                               | The degree bearing of the viewing direction. e.g. `0` = North, `90` = East, `180` = South, `270` = West. |
-| `fov_cone`                          | ✅       | `90`                              | The number of degrees the field of view cone should be. |
-| `update_interval`                   | ✅       | `10`                              | The number of seconds between each poll for flight information. |
-| `filter_flight_altitude_ft_minimum` | ❌       | `0`                               | The minimum flight altitude in feet for flights to be recorded. |
-| `filter_flight_altitude_ft_maximum` | ❌       | `60000`                           | The maximum flight altitude in feet for flights to be recorded. |
-| `hold_flight_data_seconds`          | ❌       | `0`                               | The total number of seconds to keep a flight's data after it leaves your field of view. This can act as a grace period for when you aren't able to view relevant data before the flight leaves your FOV cone. |
-| `historic_flights_max_count`        | ❌       | `0`                               | The total number of past flights to store in history. Can be used to show x number of flights that have recently left the FOV cone, useful for displaying "What was that plane?!" in case you miss it. See [Viewing historic flight information](#Viewing-historic-flight-information) for an example of how this can be utilised. |
-| `distance_units`                    | ❌       | `metric (kilometres (km))`        | The unit of measurement to record flight distance in. |
-| `altitude_units`                    | ❌       | `imperial (feet (ft))`            | The unit of measurement to record flight altitude in. |
-| `speed_units`                       | ❌       | `imperial (miles per hour (mph))` | The unit of measurement to record flight speed in. |
-
-> 💡 **TIP**: To make the initial configuration process easier, you can use the map card to easily visualise your FOV cone settings while you adjust the initial settings. See [Visualising recorded flights on a map card](#Visualising-recorded-flights-on-a-map-card) for more information.
-
-After configuring the integration, a new sensor named `sensor.visible_flights` will be created. This will update at the frequency defined by the option `update_interval` and list flights visible within the defined field of view or additionally store flights that have recently left the defined field of view if the setting `historic_flights_max_count` is set to 1 or more. The exposed sensor information can be used to create a variety of interesting dashboard cards. See [Adding visible flight information card to your dashboard](#Adding-visible-flight-information-card-to-your-dashboard) for more information.
-
-## Adding visible flight information card to your dashboard
-The template code required to achieve the card shown in the screenshot above can be found below. To create the card in dashboards that you have control over and are able to add cards to:
-1. Click the pencil icon in the top right corner to `Edit dashboard`.
-2. Click the `Add card` button in the bottom right corner.
-3. Search for and click on the `Manual` card type.
-4. Copy and paste the code below into the code text field.
-5. Click `Save`.
-6. Click `Done` in the top right corner.
-
-> If you'd like to extend this card to show historic flight data of flights that have recently left your FOV cone, complete this section first then ensure that your configuration setting `historic_flights_max_count` is 1 or more and move onto [Viewing historic flight information](#Viewing-historic-flight-information).
-
-> If you haven't changed the default name of the sensor, you should simply be able to copy and paste the code below and it should work with no changes required. Otherwise, please find and replace your sensor name before pasting (Default: `sensor.visible_flights`):
-
-```
-type: markdown
-title: What's that plane?!
-content: >-
-  {% set flights = state_attr('sensor.visible_flights', 'flights') %}
-  {% if flights and flights | count > 0 %}
-  {% for flight in flights %}
-
-  {% if flight.callsign == "Blocked" %} 🚫 [**{{ flight.callsign }}**]({{ flight.flightradar_link }})
-  {% if flight.aircraft_model %}
-  **{{ flight.aircraft_model }}** *({{ flight.aircraft_type }})* | **Registration:** {{ flight.aircraft_registration }}
-  {% endif %}
-  {%- set image = flight.large_aircraft_image_link or flight.medium_aircraft_image_link or flight.small_aircraft_image_link or flight.thumbnail_aircraft_image_link %}
-  {% if image %}
-    ![]({{ image }})
-  {% endif %}
-
-  {% elif flight.callsign %}
-  ✈️ **{{ flight.airline_name }} [**{{ flight.callsign }}**]({{ flight.flightradar_link }}) (**{{ flight.origin_airport_code }} → {{ flight.destination_airport_code }}**)**
-
-
-  {% if flight.total_distance and flight.total_distance > 0 %}
-    {%- set bar_width = 20 -%}
-    {%- set plane_pos = max(1, (bar_width * flight.progress_percent / 100) | round | int) -%}
-    **{{ flight.origin_country_code_long or flight.origin_country_code }} {{ flight.origin_flag_emoji or flight.origin_airport_code }}** `{{ '─' * (plane_pos - 1) }}✈️{{ '─' * (bar_width - plane_pos) }}` **{{ flight.destination_flag_emoji or flight.destination_airport_code }} {{ flight.destination_country_code_long or flight.destination_country_code }}**
-    📏 **Distance:** *{{ flight.distance_traveled }} of {{ flight.total_distance }} {{ state_attr('sensor.visible_flights', 'config')['distance_units'].split('(')[-1] | replace(')', '') }} ({{ flight.progress_percent }}%)*
-    📈 **Altitude:** {{ flight.altitude | default(0, true) | round(0) }} {{ state_attr('sensor.visible_flights', 'config')['altitude_units'].split('(')[-1] | replace(')', '') }} | **Speed:** {{ flight.ground_speed_kts | default(0, true) }} kts ({{ (flight.ground_speed | default(0, true)) | round(0) }} {{ state_attr('sensor.visible_flights', 'config')['speed_units'].split('(')[-1] | replace(')', '') }})
-    {% if flight.total_flight_time_formatted %} 🕑 **Total Flight Time:** {{ flight.total_flight_time_formatted }}
-    {% endif %}
-  {% endif %}
-
-  {% if flight.origin_city or flight.origin_country or flight.destination_city or flight.destination_country or flight.origin_airport_name or flight.destination_airport_name %}
-    🌍 {{ flight.origin_city }}, _**{{ flight.origin_country }}**_ → {{ flight.destination_city }}, _**{{ flight.destination_country }}**_
-    🛂 {{ flight.origin_airport_name | replace('Airport', '') | trim }} → {{ flight.destination_airport_name | replace('Airport', '') | trim }}
-  {% endif %}
-
-  {% if flight.scheduled_departure_time_local %} {% set departure_delay = flight.departure_delay_mins if flight.departure_delay_mins is not none else flight.estimated_departure_delay_mins %}
-  🛫 **Scheduled Departure:** {{ flight.scheduled_departure_time_local }}
-  {% if departure_delay is not none %}
-  {% if departure_delay > 0 %}
-    - ⚠️ **Delayed: {{ departure_delay }} minutes**
-  {% elif departure_delay < 0 %}
-    - ✅ **Early: {{ departure_delay | abs }} minutes**
-  {% endif %}
-  {% endif %}
-  {% if flight.real_departure_time_local %}
-    - **Actual Departure:** {{ flight.real_departure_time_local }}
-  {% elif flight.estimated_departure_time_local %}
-    - **Estimated Departure:** {{ flight.estimated_departure_time_local }}
-  {% endif %}
-  {% endif %}
-
-  {% if flight.scheduled_arrival_time_local %} {% set arrival_delay = flight.arrival_delay_mins if flight.arrival_delay_mins is not none else flight.estimated_arrival_delay_mins %}
-  🛬 **Scheduled Arrival:** {{ flight.scheduled_arrival_time_local }}
-  {% if arrival_delay is not none %}
-  {% if arrival_delay > 0 %}
-    - ⚠️ **Delayed: {{ arrival_delay }} minutes**
-  {% elif arrival_delay < 0 %}
-    - ✅ **Early: {{ arrival_delay | abs }} minutes**
-  {% endif %} {% endif %} {% if flight.real_arrival_time_local %}
-    - **Actual Arrival:** {{ flight.real_arrival_time_local }}
-  {% elif flight.estimated_arrival_time_local %}
-    - **Estimated Arrival:** {{ flight.estimated_arrival_time_local }}
-  {% endif %} {% endif %}
-
-  {% if flight.aircraft_model %}
-    **{{ flight.aircraft_model }}** *({{ flight.aircraft_type }})* | **Registration:** {{ flight.aircraft_registration }} {% endif %}
-  {%- set image = flight.large_aircraft_image_link or flight.medium_aircraft_image_link or flight.small_aircraft_image_link or flight.thumbnail_aircraft_image_link %}
-  {% if image %}
-    ![]({{ image }})
-  {% endif %}
-
-  ***
-  
-  {% endif %}
-  {% endfor %}
-  {% else %}
-    No visible flights at the moment.
-  {% endif %}
+```bash
+git clone https://github.com/huntrw6/airspace.git
+cd airspace
+cp .env.example .env
+# Replace AIRSPACE_ADMIN_PASSWORD and AIRSPACE_SESSION_PEPPER in .env.
+docker compose up -d --build
 ```
 
-## Viewing historic flight information
-If your configuration setting for `historic_flights_max_count` is set to 1 or more, you can utilise the `historic_flights` attribute to view a log of flights that have left your defined FOV cone. This can be especially useful in situations where you just miss a plane but are still curious about what it was so instead of asking "What's that plane?!" you're left asking "What **was** that plane?!".
+Open `http://SERVER:7373`. For public use, put Airspace behind an HTTPS reverse proxy and set
+`AIRSPACE_PUBLIC_URL` to its URL. Secure browser notifications and installable-PWA behavior require
+HTTPS (localhost is the development exception).
 
-After you've already configured your main dashboard card (see [Adding visible flight information card to your dashboard](#Adding-visible-flight-information-card-to-your-dashboard)), you can extend this to show historic flights using the code below. Simply copy and paste it after the code for the existing card.
+Generate a VAPID pair once, copy both output lines into `.env`, set the VAPID subject to a monitored
+administrator address, and restart:
 
-This section basically clones the existing card but only shows it for historic flights. The only real change is the addition of a last seen time on the title line for each flight.
-
-**N.B.** It's important to note that when a plane leaves your defined FOV cone, its flight information will stop updating as the integration stops tracking the flight at this point. Stats are correct up to the moment the flight leaves the FOV cone, at which point the data is frozen.
-
-![Example history](https://raw.githubusercontent.com/8bither0/whats-that-plane/main/example_history.jpg)
-
-> If you haven't changed the default name of the sensor, you should simply be able to copy and paste the code below and it should work with no changes required. Otherwise, please find and replace your sensor name before pasting (Default: `sensor.visible_flights`):
-
+```bash
+docker compose run --rm airspace python -m airspace.generate_vapid
+docker compose up -d
 ```
 
+## Anonymous profiles
 
-  ***
-  
-  # What was that plane?!
+There is no registration screen, username, email, recovery code, or cross-device linking. Airspace
+sets a long random credential in a Secure, HttpOnly, SameSite cookie and stores only its keyed hash.
+Database IDs, coordinates, device IDs, and push endpoints are never credentials. Clearing browser
+data or deleting the installed PWA can permanently remove access; create a new profile on another
+device. Users can delete locations or their whole profile.
 
-  {% set historic_flights = state_attr('sensor.visible_flights', 'historic_flights') %}
-  {% if historic_flights and historic_flights | count > 0 %}
-  {% for flight in historic_flights %}
+## Browsers and iPhone installation
 
-  {% if flight.callsign == "Blocked" %} 🚫 [**{{ flight.callsign }}**]({{ flight.flightradar_link }})
-  {% if flight.aircraft_model %}
-  **{{ flight.aircraft_model }}** *({{ flight.aircraft_type }})* | **Registration:** {{ flight.aircraft_registration }}
-  {% endif %}
-  {%- set image = flight.large_aircraft_image_link or flight.medium_aircraft_image_link or flight.small_aircraft_image_link or flight.thumbnail_aircraft_image_link %}
-  {% if image %}
-    ![]({{ image }})
-  {% endif %}
+Current Chrome, Edge, Firefox, and Safari releases can use the live dashboard. Web Push support
+depends on the browser and operating system. On iPhone and iPad, open Airspace in Safari, tap Share,
+choose **Add to Home Screen**, open the installed Airspace icon, and then enable notifications. The
+onboarding flow detects this case and shows installation guidance before requesting permission.
+Private/incognito browsing is unsuitable because the anonymous profile and push subscription may be
+discarded when the session closes.
 
-  {% elif flight.callsign %}
-  ✈️ **{{ flight.airline_name }} [**{{ flight.callsign }}**]({{ flight.flightradar_link }}) (**{{ flight.origin_airport_code }} → {{ flight.destination_airport_code }}**)** {% if flight.last_seen_time_formatted %} | *{{ flight.last_seen_time_formatted }}* {% endif %}
+## Reverse proxy (Nginx Proxy Manager)
 
+Create a Proxy Host to `http://airspace:7373` (or the Docker host and exposed port), enable WebSocket
+support, request a Let's Encrypt certificate, and enable Force SSL. Do not publish the container
+without TLS. Preserve the original client IP only from trusted proxy addresses; use network-level
+access controls for `/api/admin` in addition to the administrator credential.
 
-  {% if flight.total_distance and flight.total_distance > 0 %}
-    {%- set bar_width = 20 -%}
-    {%- set plane_pos = max(1, (bar_width * flight.progress_percent / 100) | round | int) -%}
-    **{{ flight.origin_country_code_long or flight.origin_country_code }} {{ flight.origin_flag_emoji or flight.origin_airport_code }}** `{{ '─' * (plane_pos - 1) }}✈️{{ '─' * (bar_width - plane_pos) }}` **{{ flight.destination_flag_emoji or flight.destination_airport_code }} {{ flight.destination_country_code_long or flight.destination_country_code }}**
-    📏 **Distance:** *{{ flight.distance_traveled }} of {{ flight.total_distance }} {{ state_attr('sensor.visible_flights', 'config')['distance_units'].split('(')[-1] | replace(')', '') }} ({{ flight.progress_percent }}%)*
-    📈 **Altitude:** {{ flight.altitude | default(0, true) | round(0) }} {{ state_attr('sensor.visible_flights', 'config')['altitude_units'].split('(')[-1] | replace(')', '') }} | **Speed:** {{ flight.ground_speed_kts | default(0, true) }} kts ({{ (flight.ground_speed | default(0, true)) | round(0) }} {{ state_attr('sensor.visible_flights', 'config')['speed_units'].split('(')[-1] | replace(')', '') }})
-    {% if flight.total_flight_time_formatted %} 🕑 **Total Flight Time:** {{ flight.total_flight_time_formatted }}
-    {% endif %}
-  {% endif %}
+## Back up, restore, update, and roll back
 
-  {% if flight.origin_city or flight.origin_country or flight.destination_city or flight.destination_country or flight.origin_airport_name or flight.destination_airport_name %}
-    🌍 {{ flight.origin_city }}, _**{{ flight.origin_country }}**_ → {{ flight.destination_city }}, _**{{ flight.destination_country }}**_
-    🛂 {{ flight.origin_airport_name | replace('Airport', '') | trim }} → {{ flight.destination_airport_name | replace('Airport', '') | trim }}
-  {% endif %}
+```bash
+# Backup while stopped for a consistent SQLite copy
+docker compose stop airspace
+docker run --rm -v airspace_airspace-data:/data -v "$PWD":/backup alpine \
+  tar czf /backup/airspace-data.tgz -C /data .
+docker compose start airspace
 
-  {% if flight.scheduled_departure_time_local %} {% set departure_delay = flight.departure_delay_mins if flight.departure_delay_mins is not none else flight.estimated_departure_delay_mins %}
-  🛫 **Scheduled Departure:** {{ flight.scheduled_departure_time_local }}
-  {% if departure_delay is not none %}
-  {% if departure_delay > 0 %}
-    - ⚠️ **Delayed: {{ departure_delay }} minutes**
-  {% elif departure_delay < 0 %}
-    - ✅ **Early: {{ departure_delay | abs }} minutes**
-  {% endif %}
-  {% endif %}
-  {% if flight.real_departure_time_local %}
-    - **Actual Departure:** {{ flight.real_departure_time_local }}
-  {% elif flight.estimated_departure_time_local %}
-    - **Estimated Departure:** {{ flight.estimated_departure_time_local }}
-  {% endif %}
-  {% endif %}
+# Restore into an empty/replacement volume
+docker compose down
+docker run --rm -v airspace_airspace-data:/data -v "$PWD":/backup alpine \
+  sh -c 'rm -f /data/* && tar xzf /backup/airspace-data.tgz -C /data'
+docker compose up -d
 
-  {% if flight.scheduled_arrival_time_local %} {% set arrival_delay = flight.arrival_delay_mins if flight.arrival_delay_mins is not none else flight.estimated_arrival_delay_mins %}
-  🛬 **Scheduled Arrival:** {{ flight.scheduled_arrival_time_local }}
-  {% if arrival_delay is not none %}
-  {% if arrival_delay > 0 %}
-    - ⚠️ **Delayed: {{ arrival_delay }} minutes**
-  {% elif arrival_delay < 0 %}
-    - ✅ **Early: {{ arrival_delay | abs }} minutes**
-  {% endif %} {% endif %} {% if flight.real_arrival_time_local %}
-    - **Actual Arrival:** {{ flight.real_arrival_time_local }}
-  {% elif flight.estimated_arrival_time_local %}
-    - **Estimated Arrival:** {{ flight.estimated_arrival_time_local }}
-  {% endif %} {% endif %}
+# Upgrade (back up first)
+git pull --ff-only
+docker compose build --pull
+docker compose up -d
 
-  {% if flight.aircraft_model %}
-    **{{ flight.aircraft_model }}** *({{ flight.aircraft_type }})* | **Registration:** {{ flight.aircraft_registration }} {% endif %}
-  {%- set image = flight.large_aircraft_image_link or flight.medium_aircraft_image_link or flight.small_aircraft_image_link or flight.thumbnail_aircraft_image_link %}
-  {% if image %}
-    ![]({{ image }})
-  {% endif %}
-
-  ***
-  
-  {% endif %}
-  {% endfor %}
-  {% else %}
-    No recent flight history.
-  {% endif %}
+# Roll back code, then restore the matching backup if a migration changed data
+git checkout <known-good-tag>
+docker compose up -d --build
 ```
 
-## Visualising recorded flights on a map card
-It's possible to visualise recorded flights and their flight trails on a map card to achieve the map card shown in the video demonstration below. This is a great way to make your dashboard more interactive and visualise where flights have come from and where they're going to. Or, simply use the map as a helper when initially configuring your FOV cone settings:
+The example configuration sets `AIRSPACE_TRUSTED_PROXY_HOPS=1` for the single reverse-proxy
+topology described here. Set it to `0` if Airspace is directly exposed, and match the exact proxy
+hop count in more complex deployments; otherwise forwarded client addresses are intentionally
+ignored to prevent header spoofing.
 
-https://github.com/user-attachments/assets/43a910b3-c2c1-41b1-8d23-74874c7dbaf3
+Inspect with `docker compose ps`, `docker compose logs -f --tail=200 airspace`,
+`curl http://localhost:7373/health/live`, and `curl http://localhost:7373/health/ready`.
 
-> ⚠️ Ensure that you have at least one configured entry before trying to use the map card.
+## Local development and tests
 
-To add the map card to dashboards that you have control over and are able to add cards to:
-1. Click the pencil icon in the top right corner to `Edit dashboard`.
-2. Click the `Add card` button in the bottom right corner.
-3. Search for and click on the `Manual` card type.
-4. Copy and paste the code below into the code text field.
-5. Click `Save`.
-6. Click `Done` in the top right corner.
-
-> If you haven't changed the default name of the sensor, you should simply be able to copy and paste the code below and it should work with no changes required. Otherwise, please find and replace your sensor name before pasting (Default: `sensor.visible_flights`):
-
-```
-square: true
-type: grid
-cards:
-  - type: custom:whats-that-plane-map
-    entity: sensor.visible_flights
-columns: 1
-grid_options:
-  columns: full
+```bash
+python -m venv .venv
+.venv/Scripts/pip install -e "./backend[dev]"  # use .venv/bin/pip on Linux/macOS
+pytest backend/tests
+cd frontend && npm install && npm run lint && npm run build && npm test
 ```
 
-> 💡 **TIP**: To make the initial configuration process easier, you can use the map card to easily visualise your FOV cone settings.
->
-> ![Example map](https://raw.githubusercontent.com/8bither0/whats-that-plane/main/example_map.jpg)
->
-> Once the map card is added to your dashboard, simply change your configuration settings then refer back to the dashboard card to view how your edits change the FOV cone **(you will need to refresh your dashboard page to force an update due to caching)**.
+## Design documentation
 
-**N.B.** It's important to note that when a plane leaves your defined FOV cone, its flight information will stop updating as the integration stops tracking the flight at this point. Stats are correct up to the moment the flight leaves the FOV cone, at which point the data is frozen.
+- [Audit](docs/audit.md)
+- [Architecture](docs/architecture.md)
+- [Provider behavior](docs/provider-behavior.md)
+- [Regional polling](docs/regional-polling.md)
+- [Anonymous profiles](docs/anonymous-profiles.md)
+- [Notifications](docs/notifications.md)
+- [Privacy](docs/privacy.md)
+- [Security](docs/security.md)
+- [Docker deployment](docs/docker-deployment.md)
+- [Migration from Home Assistant](docs/migration-from-home-assistant.md)
 
-## Support
-This was a fun little weekend project and I'm unlikely to actively support this. However, if you encounter any issues or have questions, please open an [issue](https://github.com/8bither0/whats-that-plane/issues) on GitHub and I will review if/when I'm able to.
+## Current limitations
 
-## License
-This project is licensed under the MIT License. See the [LICENSE](https://github.com/8bither0/whats-that-plane/blob/main/LICENSE) file for details.
+- The unofficial FlightRadar24 adapter and background worker are connected when
+  `AIRSPACE_PROVIDER_ENABLED=true`. These undocumented endpoints may change or reject a deployment;
+  live-provider behavior could not be exercised in this development environment, so health and
+  degraded-state diagnostics must be checked after deployment.
+- VAPID Web Push, browser subscription registration, test notifications, quiet hours, cooldowns,
+  retry limits, and invalid-subscription cleanup are connected. They still require real VAPID keys,
+  HTTPS, and verification against target browsers after deployment.
+- Device geolocation, coordinate entry, tap-to-place selection, and server-proxied address search
+  are implemented. Address search text is disclosed to the configured geocoder (Nominatim by
+  default); results are cached and outbound requests are limited to one per second.
+- Alembic applies the versioned baseline automatically at startup and is checked in CI.
+- `/admin` provides a protected operational summary and manual retention cleanup. It is intentionally
+  compact. Global limits remain environment-controlled so a compromised browser session cannot
+  silently change operational or retention policy; their effective values are visible in `/admin`.
+
+These are functional gaps, not hidden placeholders. The app remains available during provider
+failure, retains its last sightings, marks missing aircraft held/historic only after successful
+polls, and refuses to create sightings or notification intents from stale observations.
+
+## License and attribution
+
+MIT licensed. The original copyright notice for `8bither0/whats-that-plane` is preserved in
+`LICENSE`. The legacy integration, screenshots, directional-FOV idea, and related presentation were
+derived from that project. New standalone code is not attributed to the upstream author. Leaflet's
+bundled legacy distribution carries its own BSD-2-Clause header; it is excluded from the production
+image. Map deployments must preserve OpenStreetMap/CARTO attribution if those tile services are used.

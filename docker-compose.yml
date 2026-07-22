@@ -1,0 +1,30 @@
+services:
+  airspace:
+    build: .
+    image: airspace:local
+    restart: unless-stopped
+    environment:
+      AIRSPACE_ENVIRONMENT: production
+      AIRSPACE_DATABASE_URL: sqlite:////app/data/airspace.db
+      AIRSPACE_PUBLIC_URL: ${AIRSPACE_PUBLIC_URL:-http://localhost:7373}
+      AIRSPACE_COOKIE_SECURE: ${AIRSPACE_COOKIE_SECURE:-false}
+      AIRSPACE_ADMIN_PASSWORD: ${AIRSPACE_ADMIN_PASSWORD:?Set AIRSPACE_ADMIN_PASSWORD in Portainer}
+      AIRSPACE_SESSION_PEPPER: ${AIRSPACE_SESSION_PEPPER:?Set AIRSPACE_SESSION_PEPPER in Portainer}
+      AIRSPACE_PROVIDER_ENABLED: ${AIRSPACE_PROVIDER_ENABLED:-true}
+      AIRSPACE_TRUSTED_PROXY_HOPS: ${AIRSPACE_TRUSTED_PROXY_HOPS:-0}
+      AIRSPACE_GEOCODING_USER_AGENT: ${AIRSPACE_GEOCODING_USER_AGENT:-Airspace/0.1 (self-hosted)}
+      AIRSPACE_VAPID_PUBLIC_KEY: ${AIRSPACE_VAPID_PUBLIC_KEY:-}
+      AIRSPACE_VAPID_PRIVATE_KEY: ${AIRSPACE_VAPID_PRIVATE_KEY:-}
+      AIRSPACE_VAPID_SUBJECT: ${AIRSPACE_VAPID_SUBJECT:-mailto:admin@example.invalid}
+    ports:
+      - "${AIRSPACE_PORT:-7373}:7373"
+    volumes:
+      - airspace-data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:7373/health/ready',timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+volumes:
+  airspace-data:

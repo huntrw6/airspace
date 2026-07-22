@@ -1,0 +1,11 @@
+.git
+.github
+graphify-out
+**/__pycache__
+**/.pytest_cache
+frontend/node_modules
+frontend/dist
+data
+.env
+custom_components
+example*.jpg

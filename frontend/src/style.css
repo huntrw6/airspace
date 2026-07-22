@@ -1,0 +1,258 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  color: #eef6fa;
+  background: #071a2b;
+  font-synthesis: none;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 85% 5%, #194a66 0, transparent 32%),
+    linear-gradient(145deg, #071a2b, #0c3045);
+}
+main {
+  max-width: 1120px;
+  margin: auto;
+  min-height: 100vh;
+  padding: 28px clamp(20px, 5vw, 72px);
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ffffff26;
+  padding-bottom: 18px;
+}
+.brand {
+  font-weight: 900;
+  letter-spacing: 0.22em;
+}
+.status {
+  font-size: 0.82rem;
+  color: #8ee8c1;
+}
+.hero,
+main > section {
+  padding-top: clamp(50px, 10vh, 110px);
+  max-width: 900px;
+}
+.eyebrow {
+  color: #5ed2e8;
+  letter-spacing: 0.18em;
+  font-weight: 800;
+  font-size: 0.77rem;
+}
+h1 {
+  font-family: Georgia, serif;
+  font-size: clamp(3rem, 8vw, 6.5rem);
+  line-height: 0.92;
+  margin: 0.25em 0;
+}
+h1 em {
+  color: #efbb78;
+  font-weight: 400;
+}
+p {
+  font-size: 1.1rem;
+  line-height: 1.65;
+  color: #c2d3dd;
+  max-width: 640px;
+}
+button,
+select {
+  border: 0;
+  border-radius: 999px;
+  padding: 15px 22px;
+  font: inherit;
+  font-weight: 750;
+  margin: 10px 8px 0 0;
+  background: #f1bb72;
+  color: #102432;
+  cursor: pointer;
+}
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+.card {
+  background: #f5f0e8;
+  color: #112b3c;
+  border-radius: 24px;
+  padding: clamp(22px, 5vw, 45px);
+  box-shadow: 0 24px 80px #0006;
+}
+.card p,
+.card small {
+  color: #405867;
+}
+.card h2 {
+  font:
+    2rem Georgia,
+    serif;
+}
+.card input {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #9aadb7;
+  border-radius: 10px;
+  font: inherit;
+}
+.choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.choices button {
+  border-radius: 12px;
+  background: #dce5e7;
+  text-align: left;
+}
+.choices button small {
+  display: block;
+}
+.choices .selected {
+  background: #5ed2e8;
+}
+.quiet {
+  background: transparent;
+}
+.fine {
+  font-size: 0.83rem;
+}
+.error {
+  color: #ffb4a7;
+}
+.grid {
+  display: grid;
+  gap: 18px;
+}
+.flight {
+  background: #f5f0e8;
+  color: #112b3c;
+  border-radius: 20px;
+  padding: 24px;
+}
+.flight p {
+  color: #405867;
+}
+.danger {
+  background: #d14f4f;
+  color: white;
+}
+.map {
+  height: 320px;
+  width: 100%;
+  border-radius: 18px;
+  margin: 18px 0;
+  color: #102432;
+  overflow: hidden;
+}
+.dashboard-map {
+  height: 420px;
+}
+.coordinate-fields,
+.time-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.coordinate-fields label,
+.time-fields label,
+.location-settings > label {
+  display: grid;
+  gap: 6px;
+  font-weight: 700;
+}
+.coordinate-fields input,
+.time-fields input,
+.location-settings input {
+  width: 100%;
+  border: 1px solid #9aadb7;
+  border-radius: 10px;
+  padding: 11px;
+  font: inherit;
+}
+.location-settings {
+  border: 1px solid #ffffff35;
+  border-radius: 18px;
+  margin: 18px 0;
+  padding: 20px;
+  display: grid;
+  gap: 12px;
+}
+.location-settings legend {
+  font:
+    1.4rem Georgia,
+    serif;
+  padding: 0 8px;
+}
+.location-settings select {
+  margin: 0;
+  border-radius: 10px;
+  background: #f5f0e8;
+}
+.location-settings .checkbox {
+  display: flex;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+.location-settings .checkbox input {
+  width: auto;
+}
+details {
+  margin-top: 24px;
+}
+summary {
+  cursor: pointer;
+  font-weight: 800;
+  padding: 12px 0;
+}
+.admin-summary {
+  background: #03111d;
+  border: 1px solid #ffffff28;
+  border-radius: 16px;
+  padding: 20px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+.address-results {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+.address-results button {
+  width: 100%;
+  text-align: left;
+}
+.highlighted {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.history {
+  margin-top: 1rem;
+}
+@media (max-width: 550px) {
+  .status {
+    font-size: 0.68rem;
+  }
+  .choices,
+  .coordinate-fields,
+  .time-fields {
+    grid-template-columns: 1fr;
+  }
+  h1 {
+    font-size: 3.2rem;
+  }
+  .map,
+  .dashboard-map {
+    height: 280px;
+  }
+}
