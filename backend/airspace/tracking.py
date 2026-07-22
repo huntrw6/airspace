@@ -11,7 +11,6 @@ from .detection import (
     bearing_degrees,
     distance_km,
     next_state,
-    within_fov,
 )
 from .models import (
     FlightState,
@@ -31,6 +30,7 @@ VISIBLE_STATES = {
     FlightState.overhead.value,
     FlightState.departing.value,
 }
+MAP_BUFFER_KM = 2.0
 
 
 def aware_utc(value: datetime) -> datetime:
@@ -82,20 +82,6 @@ class TrackingService:
                 distance = distance_km(
                     location.latitude, location.longitude, flight.latitude, flight.longitude
                 )
-                if distance > location.radius_km or not altitude_matches(
-                    flight.altitude_ft,
-                    location.minimum_altitude_ft,
-                    location.maximum_altitude_ft,
-                ):
-                    continue
-                bearing = bearing_degrees(
-                    location.latitude, location.longitude, flight.latitude, flight.longitude
-                )
-                if location.detection_mode == "directional" and not within_fov(
-                    bearing, location.facing_direction, location.fov_width
-                ):
-                    continue
-                stale = now - flight.observed_at > self._stale_after
                 active = db.scalar(
                     select(Sighting)
                     .where(
@@ -106,20 +92,40 @@ class TrackingService:
                     .order_by(Sighting.first_detected_at.desc())
                     .limit(1)
                 )
+                if distance > location.radius_km + MAP_BUFFER_KM or not altitude_matches(
+                    flight.altitude_ft,
+                    location.minimum_altitude_ft,
+                    location.maximum_altitude_ft,
+                ):
+                    if active is not None:
+                        active.state = FlightState.historic.value
+                    continue
+                bearing = bearing_degrees(
+                    location.latitude, location.longitude, flight.latitude, flight.longitude
+                )
+                stale = now - flight.observed_at > self._stale_after
                 previous_value = active.snapshot.get("distance_km") if active else None
                 previous_distance = (
                     float(previous_value) if isinstance(previous_value, (int, float, str)) else None
                 )
-                state = next_state(
-                    FlightState(active.state) if active else None,
-                    LifecycleInput(
-                        in_view=True,
-                        distance_km=distance,
-                        previous_distance_km=previous_distance,
-                        overhead_threshold_km=location.overhead_threshold_km,
-                        stale=stale,
-                    ),
-                )
+                inside_notification_area = distance <= location.radius_km
+                if inside_notification_area:
+                    state = next_state(
+                        FlightState(active.state) if active else None,
+                        LifecycleInput(
+                            in_view=True,
+                            distance_km=distance,
+                            previous_distance_km=previous_distance,
+                            overhead_threshold_km=location.overhead_threshold_km,
+                            stale=stale,
+                        ),
+                    )
+                else:
+                    state = (
+                        FlightState.departing
+                        if previous_distance is not None and distance > previous_distance
+                        else FlightState.detected
+                    )
                 snapshot = flight_snapshot(flight, distance, bearing)
                 point = {
                     "latitude": flight.latitude,
@@ -136,7 +142,7 @@ class TrackingService:
                         flight_id=flight.flight_id,
                         provider_flight_id=flight.provider_flight_id,
                         first_detected_at=now,
-                        first_in_view_at=now,
+                        first_in_view_at=now if inside_notification_area else None,
                         last_seen_at=flight.observed_at,
                         state=state.value,
                         minimum_distance_km=distance,
@@ -146,7 +152,6 @@ class TrackingService:
                     db.add(active)
                     db.flush()
                     created.append(active)
-                    self._create_notification_intents(db, location, active, state, now)
                 else:
                     active.last_seen_at = max(
                         aware_utc(active.last_seen_at), aware_utc(flight.observed_at)
@@ -161,6 +166,10 @@ class TrackingService:
                     ):
                         trail.append(point)
                     active.trail = trail[-self._trail_limit :]
+                    if inside_notification_area and active.first_in_view_at is None:
+                        active.first_in_view_at = now
+                if inside_notification_area:
+                    self._create_notification_intents(db, location, active, state, now)
                 seen.add((location.id, flight.flight_id))
 
         active_rows = db.scalars(

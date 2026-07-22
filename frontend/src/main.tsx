@@ -36,7 +36,6 @@ function App() {
       longitude: number;
     } | null>(null),
     [radius, setRadius] = useState(8),
-    [direction, setDirection] = useState("all"),
     [adding, setAdding] = useState(false),
     [status, setStatus] = useState("not_configured"),
     [sightings, setSightings] = useState<Sighting[]>([]);
@@ -141,12 +140,12 @@ function App() {
     if (!position) return;
     try {
       await api.addLocation({
-        label: "My viewing spot",
+        label: "your circle",
         ...position,
         radius_km: radius,
-        detection_mode: direction === "all" ? "all" : "directional",
-        facing_direction: direction === "all" ? 0 : Number(direction),
-        fov_width: direction === "all" ? 360 : 120,
+        detection_mode: "all",
+        facing_direction: 0,
+        fov_width: 360,
         overhead_threshold_km: 1,
         notification_cooldown_seconds: 1800,
       });
@@ -162,9 +161,9 @@ function App() {
         label: "Another viewing spot",
         ...position,
         radius_km: radius,
-        detection_mode: direction === "all" ? "all" : "directional",
-        facing_direction: direction === "all" ? 0 : Number(direction),
-        fov_width: direction === "all" ? 360 : 120,
+        detection_mode: "all",
+        facing_direction: 0,
+        fov_width: 360,
         overhead_threshold_km: 1,
         notification_cooldown_seconds: 1800,
       });
@@ -312,28 +311,11 @@ function App() {
                     key={n}
                   >
                     {n}
-                    <small>{v} km</small>
+                    <small>{v} km · {(v * 0.621371).toFixed(1)} mi</small>
                   </button>
                 ))}
               </div>
-              <button onClick={() => setStep(3)}>Continue</button>
-            </div>
-          )}
-          {step === 3 && (
-            <div className="card">
-              <h2>Which side should we watch?</h2>
-              <select
-                aria-label="Viewing direction"
-                value={direction}
-                onChange={(e) => setDirection(e.target.value)}
-              >
-                <option value="all">All directions</option>
-                <option value="0">North side</option>
-                <option value="90">East side</option>
-                <option value="180">South side</option>
-                <option value="270">West side</option>
-              </select>
-              <button onClick={save}>Save my viewing spot</button>
+              <button onClick={save}>Save your circle</button>
             </div>
           )}
           {step === 4 && (
@@ -379,13 +361,11 @@ function App() {
       </header>
       <section>
         <p className="eyebrow">YOUR AIRSPACE</p>
-        <h1>{nearby.length ? "A plane is nearby." : "The sky is quiet."}</h1>
+        <h1>{nearby.length ? "A plane is nearby" : "The sky is quiet"}</h1>
         <p>
           {nearby.length
             ? "Here’s what’s passing your viewing spot right now."
-            : "We’re watching " +
-              profile.locations.map((l) => l.label).join(", ") +
-              " and will let you know."}
+            : "We’re watching your circle and you'll get a notification when something is overhead"}
         </p>
         <FlightMap locations={profile.locations} sightings={nearby} />
         <div className="grid">

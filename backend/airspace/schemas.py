@@ -29,8 +29,9 @@ class LocationCreate(BaseModel):
         if self.minimum_altitude_ft is not None and self.maximum_altitude_ft is not None:
             if self.minimum_altitude_ft > self.maximum_altitude_ft:
                 raise ValueError("Minimum altitude must not exceed maximum altitude.")
-        if self.detection_mode == "all":
-            self.fov_width = 360
+        self.detection_mode = "all"
+        self.facing_direction = 0
+        self.fov_width = 360
         return self
 
 

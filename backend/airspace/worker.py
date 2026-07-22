@@ -9,7 +9,7 @@ from .database import SessionLocal
 from .models import MonitoredLocation, PollingRegion, ProviderHealth
 from .polling import LocationPoint, deduplicate_flights, group_regions
 from .providers import FlightProvider, FlightRadar24Provider, NormalizedFlight, ProviderError
-from .tracking import TrackingService
+from .tracking import MAP_BUFFER_KM, TrackingService
 from .notifications import PushDispatcher
 
 LOGGER = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ class PollingWorker:
             health.last_attempt_at = now
             locations = db.scalars(select(MonitoredLocation).where(MonitoredLocation.enabled)).all()
             regions = group_regions(
-                LocationPoint(row.id, row.latitude, row.longitude, row.radius_km)
+                LocationPoint(row.id, row.latitude, row.longitude, row.radius_km + MAP_BUFFER_KM)
                 for row in locations
             )
             flights_by_location: dict[str, list[NormalizedFlight]] = {}

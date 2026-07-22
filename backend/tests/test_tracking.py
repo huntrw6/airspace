@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import create_engine, func, select
@@ -132,6 +133,59 @@ def test_stale_new_flight_creates_nothing():
     TrackingService(120).process_cycle(db, {location.id: [old]}, {location.id}, now)
     assert db.scalar(select(func.count()).select_from(Sighting)) == 0
     assert db.scalar(select(func.count()).select_from(NotificationDelivery)) == 0
+
+
+def test_two_kilometer_map_buffer_does_not_notify_until_circle_entry():
+    db = database()
+    location = seed(db)
+    now = datetime.now(timezone.utc)
+    service = TrackingService(120)
+    preview = replace(flight(now), latitude=location.latitude + 11 / 111.32)
+    service.process_cycle(db, {location.id: [preview]}, {location.id}, now)
+    sighting = db.scalar(select(Sighting))
+    assert sighting is not None
+    assert sighting.state == "detected"
+    assert sighting.first_in_view_at is None
+    assert db.scalar(select(func.count()).select_from(NotificationDelivery)) == 0
+
+    entered = replace(
+        flight(now + timedelta(seconds=20)),
+        latitude=location.latitude + 9 / 111.32,
+    )
+    service.process_cycle(db, {location.id: [entered]}, {location.id}, now + timedelta(seconds=20))
+    db.refresh(sighting)
+    assert sighting.state in {"approaching", "in_view"}
+    assert sighting.first_in_view_at is not None
+    assert db.scalar(select(func.count()).select_from(NotificationDelivery)) == 1
+
+
+def test_observed_flight_leaving_map_buffer_moves_to_history_immediately():
+    db = database()
+    location = seed(db)
+    now = datetime.now(timezone.utc)
+    service = TrackingService(120)
+    service.process_cycle(db, {location.id: [flight(now)]}, {location.id}, now)
+    sighting = db.scalar(select(Sighting))
+    outside = replace(
+        flight(now + timedelta(seconds=20)),
+        latitude=location.latitude + 12.5 / 111.32,
+    )
+    service.process_cycle(db, {location.id: [outside]}, {location.id}, now + timedelta(seconds=20))
+    db.refresh(sighting)
+    assert sighting.state == "historic"
+
+
+def test_saved_directional_settings_no_longer_filter_aircraft():
+    db = database()
+    location = seed(db)
+    location.detection_mode = "directional"
+    location.facing_direction = 180
+    location.fov_width = 30
+    db.commit()
+    now = datetime.now(timezone.utc)
+    TrackingService(120).process_cycle(db, {location.id: [flight(now)]}, {location.id}, now)
+    assert db.scalar(select(func.count()).select_from(Sighting)) == 1
+    assert db.scalar(select(func.count()).select_from(NotificationDelivery)) == 1
 
 
 def test_quiet_hours_suppress_notification_intent():

@@ -35,7 +35,12 @@ describe("location settings", () => {
       label: "Beach",
       latitude: 0,
       longitude: 0,
+      detection_mode: "all",
+      facing_direction: 0,
+      fov_width: 360,
     });
+    expect(screen.queryByLabelText("Side to watch")).toBeNull();
+    expect(screen.getByRole("option", { name: "Nearby — 8 km / 5.0 mi" })).toBeTruthy();
     expect(changed).toHaveBeenCalled();
   });
 });

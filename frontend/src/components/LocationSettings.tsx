@@ -10,11 +10,6 @@ export function LocationSettings({
 }) {
   const [label, setLabel] = useState(location.label);
   const [radius, setRadius] = useState(location.radius_km);
-  const [direction, setDirection] = useState(
-    location.detection_mode === "all"
-      ? "all"
-      : String(location.facing_direction),
-  );
   const [quietEnabled, setQuietEnabled] = useState(
     Boolean(location.quiet_hours?.enabled),
   );
@@ -38,9 +33,9 @@ export function LocationSettings({
         longitude: location.longitude,
         normalized_address: location.normalized_address,
         radius_km: radius,
-        detection_mode: direction === "all" ? "all" : "directional",
-        facing_direction: direction === "all" ? 0 : Number(direction),
-        fov_width: direction === "all" ? 360 : 120,
+        detection_mode: "all",
+        facing_direction: 0,
+        fov_width: 360,
         minimum_altitude_ft: minimumAltitude ? Number(minimumAltitude) : undefined,
         maximum_altitude_ft: maximumAltitude ? Number(maximumAltitude) : undefined,
         overhead_threshold_km: location.overhead_threshold_km,
@@ -75,23 +70,10 @@ export function LocationSettings({
           value={radius}
           onChange={(event) => setRadius(Number(event.target.value))}
         >
-          <option value={1.5}>Directly overhead</option>
-          <option value={4}>Very close</option>
-          <option value={8}>Nearby</option>
-          <option value={20}>Wider area</option>
-        </select>
-      </label>
-      <label>
-        Side to watch
-        <select
-          value={direction}
-          onChange={(event) => setDirection(event.target.value)}
-        >
-          <option value="all">All directions</option>
-          <option value="0">North side</option>
-          <option value="90">East side</option>
-          <option value="180">South side</option>
-          <option value="270">West side</option>
+          <option value={1.5}>Directly overhead — 1.5 km / 0.9 mi</option>
+          <option value={4}>Very close — 4 km / 2.5 mi</option>
+          <option value={8}>Nearby — 8 km / 5.0 mi</option>
+          <option value={20}>Wider area — 20 km / 12.4 mi</option>
         </select>
       </label>
       <label className="checkbox">
