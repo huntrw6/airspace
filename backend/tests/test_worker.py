@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
+import httpx
 import pytest
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session, sessionmaker
@@ -12,6 +13,7 @@ from airspace.models import (
     MonitoredLocation,
     NotificationDelivery,
     Profile,
+    ProviderHealth,
     PushSubscription,
     Sighting,
 )
@@ -135,3 +137,33 @@ async def test_worker_retries_after_unexpected_cycle_failure(monkeypatch):
     await worker.run()
     assert attempts == 1
     assert not worker.running
+
+
+@pytest.mark.asyncio
+async def test_transport_failure_is_contained_and_recorded(monkeypatch):
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    Base.metadata.create_all(engine)
+    factory = sessionmaker(bind=engine, expire_on_commit=False)
+    monkeypatch.setattr(worker_module, "SessionLocal", factory)
+    with factory() as db:
+        add_profile(db, "c", 38.60, -121.40)
+        db.commit()
+
+    provider = FakeProvider()
+
+    async def connection_failure(_: Region) -> list[NormalizedFlight]:
+        request = httpx.Request("GET", "https://feed.invalid")
+        raise httpx.ConnectError("upstream unavailable", request=request)
+
+    monkeypatch.setattr(provider, "get_flights_in_region", connection_failure)
+    worker = PollingWorker(provider, Settings(provider_enabled=False))
+    await worker.poll_once()
+
+    with factory() as db:
+        health = db.get(ProviderHealth, "fake")
+        assert health is not None
+        assert health.status == "unavailable"
+        assert health.last_error == "ConnectError"
+        assert health.consecutive_failures == 1

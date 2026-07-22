@@ -166,6 +166,68 @@ async def test_regional_feed_requests_all_airborne_position_sources():
 
 
 @pytest.mark.asyncio
+async def test_metadata_only_feed_retries_with_minimal_request():
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if len(requests) == 1:
+            return httpx.Response(
+                200,
+                json={
+                    "full_count": 20_000,
+                    "version": 4,
+                    "stats": {"visible": {"ads-b": 0, "mlat": 0}},
+                },
+            )
+        return httpx.Response(
+            200,
+            json={
+                "full_count": 20_000,
+                "flight": [
+                    "abc123", 47.4, -122.3, 90, 10_000, 250, "", "radar", "B738",
+                    "N123", 1_700_000_000,
+                ],
+            },
+        )
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    provider = FlightRadar24Provider(
+        "https://feed.invalid", "https://details.invalid", client=client
+    )
+    region = next(iter(group_regions([LocationPoint("home", 47.4, -122.3)])))
+    flights = await provider.get_flights_in_region(region)
+    assert len(flights) == 1
+    assert len(requests) == 2
+    assert set(requests[1].url.params) == {"bounds"}
+    await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_transport_errors_receive_bounded_retries(monkeypatch):
+    calls = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        raise httpx.ConnectError("upstream unavailable", request=request)
+
+    async def no_sleep(_: float) -> None:
+        return None
+
+    monkeypatch.setattr(provider_module.asyncio, "sleep", no_sleep)
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    provider = FlightRadar24Provider(
+        "https://feed.invalid", "https://details.invalid", client=client
+    )
+    region = next(iter(group_regions([LocationPoint("home", 47.4, -122.3)])))
+    with pytest.raises(ProviderError, match="bounded retries"):
+        await provider.get_flights_in_region(region)
+    assert calls == 3
+    await client.aclose()
+
+
+@pytest.mark.asyncio
 async def test_detail_cache_reuses_successful_result():
     calls = 0
 

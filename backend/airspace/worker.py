@@ -2,6 +2,7 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 
+import httpx
 from sqlalchemy import select
 
 from .config import Settings
@@ -116,10 +117,12 @@ class PollingWorker:
                     successful.update(location_ids)
                     for location_id in location_ids:
                         flights_by_location.setdefault(location_id, []).extend(enriched)
-                except ProviderError as error:
-                    message = type(error).__name__
+                except (ProviderError, httpx.TransportError) as error:
+                    cause = error.__cause__ or error
+                    message = type(cause).__name__
                     errors.append(message)
                     diagnostic.last_error = message
+                    LOGGER.warning("Provider region %s failed: %s", region.key, message)
             if successful:
                 flights_by_location = {
                     location_id: deduplicate_flights(flights)
@@ -127,7 +130,7 @@ class PollingWorker:
                 }
                 self.tracker.process_cycle(db, flights_by_location, successful, now)
                 health.last_success_at = now
-                health.consecutive_failures = 0 if not errors else health.consecutive_failures
+                health.consecutive_failures = 0 if not errors else health.consecutive_failures + 1
                 health.status = "degraded" if errors else "healthy"
             else:
                 health.consecutive_failures += 1

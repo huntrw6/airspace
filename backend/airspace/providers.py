@@ -66,7 +66,7 @@ async def bounded_retry(operation: Any, attempts: int = 3, base_delay: float = 0
             return await operation()
         except ProviderRateLimited:
             raise
-        except (TimeoutError, ProviderError) as error:
+        except (TimeoutError, httpx.TransportError, ProviderError) as error:
             last = error
             if attempt + 1 < attempts:
                 await asyncio.sleep(base_delay * (2**attempt) + random.uniform(0, base_delay))
@@ -280,17 +280,22 @@ class FlightRadar24Provider:
             raise ProviderError("FlightRadar24 returned malformed JSON") from error
 
     async def get_flights_in_region(self, region: Region) -> list[NormalizedFlight]:
+        url = f"{self._base_url}/zones/fcgi/feed.js"
+        bounds = f"{region.north},{region.south},{region.west},{region.east}"
         payload = await bounded_retry(
-            lambda: self._json(
-                f"{self._base_url}/zones/fcgi/feed.js",
-                {
-                    **self._feed_params,
-                    "bounds": f"{region.north},{region.south},{region.west},{region.east}",
-                },
-            )
+            lambda: self._json(url, {**self._feed_params, "bounds": bounds})
         )
         if not isinstance(payload, dict):
             raise ProviderError("FlightRadar24 feed was not an object")
+        metadata_keys = {"full_count", "version", "stats", "copyright"}
+        visible = payload.get("stats", {}).get("visible", {})
+        metadata_only = not (payload.keys() - metadata_keys) and (
+            isinstance(visible, dict) and visible and not any(visible.values())
+        )
+        if metadata_only:
+            payload = await bounded_retry(lambda: self._json(url, {"bounds": bounds}))
+            if not isinstance(payload, dict):
+                raise ProviderError("FlightRadar24 fallback feed was not an object")
         flights: list[NormalizedFlight] = []
         for provider_id, values in payload.items():
             if provider_id in {"full_count", "version", "stats"}:

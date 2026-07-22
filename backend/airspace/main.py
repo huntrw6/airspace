@@ -202,10 +202,24 @@ def ready(db: Session = Depends(get_db)) -> dict:
 @app.get("/api/status")
 def api_status(db: Session = Depends(get_db), settings: Settings = Depends(get_settings)) -> dict:
     health = db.get(ProviderHealth, "flightradar24")
+    provider_status = health.status if health else "not_configured"
+    if settings.provider_enabled and (not polling_worker or not polling_worker.running):
+        provider_status = "unavailable"
+    elif health and polling_worker and polling_worker.active_region_count:
+        attempted_at = health.last_attempt_at
+        if attempted_at is not None:
+            attempted_at = (
+                attempted_at.replace(tzinfo=timezone.utc)
+                if attempted_at.tzinfo is None
+                else attempted_at.astimezone(timezone.utc)
+            )
+        stale_after = timedelta(seconds=max(60, settings.poll_interval_seconds * 3))
+        if attempted_at is None or datetime.now(timezone.utc) - attempted_at > stale_after:
+            provider_status = "unavailable"
     return {
         "application": "running",
         "database": "available",
-        "provider": health.status if health else "not_configured",
+        "provider": provider_status,
         "last_successful_poll": health.last_success_at if health else None,
         "last_polling_attempt": health.last_attempt_at if health else None,
         "active_polling_interval": settings.poll_interval_seconds,
