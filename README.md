@@ -1,5 +1,5 @@
 # AirSpace
-[![Publish container](https://github.com/huntrw6/airspace/actions/workflows/publish-container.yml/badge.svg)](https://github.com/huntrw6/airspace/actions/workflows/publish-container.yml)
+[![Container](https://github.com/huntrw6/airspace/actions/workflows/publish-container.yml/badge.svg)](https://github.com/huntrw6/airspace/actions/workflows/publish-container.yml)
 
 
 AirSpace is a friendly, self-hosted flight tracker. Choose a radius & watch nearby
