@@ -1,6 +1,6 @@
 # AirSpace
 
-AirSpace is a friendly, self-hosted flight tracker. Choose a radius qnd watch nearby
+AirSpace is a friendly, self-hosted flight tracker. Choose a radius & watch nearby
 aircraft on a live radar-style map, receiving browser notifications when something enters your
 airspace.
 
