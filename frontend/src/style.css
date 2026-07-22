@@ -294,6 +294,17 @@ summary {
   overflow: visible;
   pointer-events: none;
 }
+.radar-range-ring {
+  fill: none;
+  stroke: #77ddeb;
+  stroke-width: 0.45;
+  opacity: 0.2;
+}
+.radar-center-dot {
+  fill: #a9f3ff;
+  opacity: 0.78;
+  filter: drop-shadow(0 0 1.2px #5ed2e8);
+}
 .radar-sweep-vector {
   transform-box: view-box;
   transform-origin: center;

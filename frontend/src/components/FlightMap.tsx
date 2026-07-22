@@ -147,6 +147,9 @@ function radarSweepElement(): SVGSVGElement {
   element.setAttribute("aria-hidden", "true");
   element.classList.add("radar-sweep-overlay");
   element.innerHTML = `
+    <circle class="radar-range-ring" cx="50" cy="50" r="16.67" />
+    <circle class="radar-range-ring" cx="50" cy="50" r="33.33" />
+    <circle class="radar-center-dot" cx="50" cy="50" r="1.25" />
     <g class="radar-sweep-vector">
       <path class="radar-trail radar-trail-far" d="M50 50 L6.7 25 A50 50 0 0 1 50 0 Z" />
       <path class="radar-trail radar-trail-mid" d="M50 50 L17.9 11.7 A50 50 0 0 1 50 0 Z" />
