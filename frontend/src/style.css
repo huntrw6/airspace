@@ -239,6 +239,20 @@ summary {
 .history {
   margin-top: 1rem;
 }
+.aircraft-marker {
+  background: transparent;
+  border: 0;
+  color: #f1bb72;
+  font-size: 30px;
+  filter: drop-shadow(0 2px 4px #000) drop-shadow(0 0 3px #071a2b);
+}
+.aircraft-marker span {
+  display: block;
+  line-height: 34px;
+  text-align: center;
+  transform-origin: center;
+  transition: transform 250ms ease;
+}
 @media (max-width: 550px) {
   .status {
     font-size: 0.68rem;

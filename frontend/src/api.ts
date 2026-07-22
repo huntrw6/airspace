@@ -33,6 +33,8 @@ export type Sighting = {
     aircraft_type?: string;
     altitude_ft?: number;
     heading?: number;
+    ground_speed_knots?: number;
+    observed_at?: string;
   };
 };
 export type Profile = {

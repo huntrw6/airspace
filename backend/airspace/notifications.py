@@ -37,17 +37,12 @@ def notification_payload(sighting: Sighting, public_url: str) -> dict:
     aircraft = flight.get("aircraft_type") or "Aircraft type unavailable"
     origin = flight.get("origin_city") or "an unknown origin"
     destination = flight.get("destination_city") or "an unknown destination"
-    distance = flight.get("distance_km")
     altitude = flight.get("altitude_ft")
-    title = f"{airline + ' ' if airline else ''}{callsign} is nearby"
-    facts = [aircraft, f"from {origin} to {destination}"]
-    if isinstance(distance, (int, float)):
-        facts.append(f"about {distance:.1f} km away")
-    if isinstance(altitude, (int, float)):
-        facts.append(f"at {altitude:,.0f} feet")
+    flight_name = " ".join(value for value in (airline, callsign) if value)
+    altitude_text = f" at {altitude:,.0f} feet" if isinstance(altitude, (int, float)) else ""
     return {
-        "title": title,
-        "body": ", ".join(facts) + ".",
+        "title": "📡 In Your Airspace ✈️",
+        "body": f"{flight_name}\n{origin} ➤ {destination}\n{aircraft}{altitude_text}",
         "tag": f"airspace-{sighting.id}",
         "url": f"{public_url.rstrip('/')}/?sighting={sighting.id}",
     }

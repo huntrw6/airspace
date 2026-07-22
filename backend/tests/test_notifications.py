@@ -148,3 +148,23 @@ def test_notification_payload_contains_no_coordinates_or_endpoint():
         serialized = str(payload)
         assert "latitude" not in serialized and "longitude" not in serialized
         assert payload["url"].startswith("https://planes.example.com/")
+
+
+def test_notification_payload_uses_friendly_multiline_format():
+    engine = create_engine("sqlite://", poolclass=StaticPool)
+    Base.metadata.create_all(engine)
+    with Session(engine) as db:
+        _, sighting = seeded_delivery(db, settings())
+        sighting.snapshot.update(
+            airline="Hawaiian Airlines",
+            callsign="ASA836",
+            origin_city="Honolulu",
+            destination_city="Phoenix",
+            aircraft_type="Airbus A330",
+            altitude_ft=39000,
+        )
+        payload = notification_payload(sighting, "https://planes.example.com")
+        assert payload["title"] == "📡 In Your Airspace ✈️"
+        assert payload["body"] == (
+            "Hawaiian Airlines ASA836\nHonolulu ➤ Phoenix\nAirbus A330 at 39,000 feet"
+        )
