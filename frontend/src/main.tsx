@@ -8,7 +8,7 @@ import { AdminApp } from "./components/AdminApp";
 import { AddressSearch } from "./components/AddressSearch";
 import { SightingCard } from "./components/SightingCard";
 import { AppHeader, type ConnectionState } from "./components/AppHeader";
-import { isLiveSighting } from "./sightings";
+import { isLiveSighting, orderLivePanelsByDistance } from "./sightings";
 import "./style.css";
 const presets = {
   "Directly overhead": 1.5,
@@ -372,6 +372,7 @@ function App() {
     );
   }
   const nearby = sightings.filter(isLiveSighting);
+  const nearbyPanels = orderLivePanelsByDistance(nearby);
   const selectedSighting = new URLSearchParams(location.search).get("sighting");
   const history = sightings.filter((s) => s.state !== "held" && !isLiveSighting(s));
   return (
@@ -381,7 +382,7 @@ function App() {
         <h1>{nearby.length ? "A plane is nearby" : "The sky is quiet"}</h1>
         <FlightMap locations={profile.locations} sightings={nearby} />
         <div className="grid">
-          {nearby.map((s) => (
+          {nearbyPanels.map((s) => (
             <SightingCard key={s.id} sighting={s} expanded={selectedSighting === s.id} />
           ))}
         </div>
