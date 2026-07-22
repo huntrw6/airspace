@@ -330,6 +330,10 @@ def add_push(
 ):
     if not body.endpoint.startswith("https://"):
         raise HTTPException(422, "Push endpoints must use HTTPS.")
+    digest = hashlib.sha256(body.endpoint.encode()).hexdigest()
+    existing = db.scalar(
+        select(PushSubscription).where(PushSubscription.endpoint_hash == digest)
+    )
     count = (
         db.scalar(
             select(func.count())
@@ -338,18 +342,34 @@ def add_push(
         )
         or 0
     )
-    if count >= settings.max_subscriptions_per_profile:
+    if existing is None and count >= settings.max_subscriptions_per_profile:
         raise HTTPException(409, "Push subscription limit reached.")
-    digest = hashlib.sha256(body.endpoint.encode()).hexdigest()
-    device = PushSubscription(
-        profile_id=profile.id,
-        endpoint_hash=digest,
-        subscription_json=encrypt_subscription(
-            {"endpoint": body.endpoint, "keys": body.keys}, settings
-        ),
-        platform=body.platform,
+    if (
+        existing is not None
+        and existing.profile_id != profile.id
+        and count >= settings.max_subscriptions_per_profile
+    ):
+        raise HTTPException(409, "Push subscription limit reached.")
+    encrypted = encrypt_subscription(
+        {"endpoint": body.endpoint, "keys": body.keys}, settings
     )
-    db.add(device)
+    if existing is None:
+        db.add(
+            PushSubscription(
+                profile_id=profile.id,
+                endpoint_hash=digest,
+                subscription_json=encrypted,
+                platform=body.platform,
+            )
+        )
+    else:
+        existing.profile_id = profile.id
+        existing.subscription_json = encrypted
+        existing.platform = body.platform
+        existing.permission_state = "granted"
+        existing.enabled = True
+        existing.permanent_failure = False
+        existing.last_failure_at = None
     db.commit()
     return {"status": "registered"}
 
