@@ -109,7 +109,8 @@ const HELICOPTER_CODES = new Set([
   "KA27", "KA29", "KA31", "KA32", "UH1", "H60", "CH47", "AH64", "V22",
 ]);
 
-export function isHelicopter(aircraftType?: string): boolean {
+export function isHelicopter(aircraftType?: string, aircraftKind?: string): boolean {
+  if (aircraftKind) return aircraftKind === "helicopter";
   if (!aircraftType) return false;
   const normalized = aircraftType.trim().toUpperCase();
   return (
@@ -129,8 +130,8 @@ export function flightMarkerLabel(flight: Sighting["flight"]): string {
   return [airline, callsign].filter(Boolean).join(" ") || "Unidentified aircraft";
 }
 
-function aircraftIcon(heading?: number, aircraftType?: string): L.DivIcon {
-  const helicopter = isHelicopter(aircraftType);
+function aircraftIcon(heading?: number, aircraftType?: string, aircraftKind?: string): L.DivIcon {
+  const helicopter = isHelicopter(aircraftType, aircraftKind);
   const rotation = markerRotation(heading, helicopter);
   return L.divIcon({
     className: "aircraft-marker",
@@ -207,14 +208,24 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
       let marker = markers.current.get(sighting.id);
       if (!marker) {
         marker = L.marker(position, {
-          icon: aircraftIcon(sighting.flight.heading, sighting.flight.aircraft_type),
+          icon: aircraftIcon(
+            sighting.flight.heading,
+            sighting.flight.aircraft_type,
+            sighting.flight.aircraft_kind,
+          ),
         })
           .bindTooltip(label, { direction: "right", offset: [12, 0] })
           .addTo(map.current!);
         markers.current.set(sighting.id, marker);
       } else {
         marker.setLatLng(position);
-        marker.setIcon(aircraftIcon(sighting.flight.heading, sighting.flight.aircraft_type));
+        marker.setIcon(
+          aircraftIcon(
+            sighting.flight.heading,
+            sighting.flight.aircraft_type,
+            sighting.flight.aircraft_kind,
+          ),
+        );
         marker.setTooltipContent(label);
       }
     });

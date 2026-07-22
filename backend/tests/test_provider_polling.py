@@ -94,6 +94,8 @@ def test_fr24_positional_payload_is_centralized_and_typed():
     assert parsed.latitude == 0 and parsed.longitude == 0
     assert parsed.altitude_ft == 8500 and parsed.callsign == "WN123"
     assert parsed.registration == "N123"
+    assert parsed.aircraft_type_code == "B738"
+    assert parsed.aircraft_kind == "plane"
 
 
 def test_details_handle_missing_fields_without_erasing_position():
@@ -165,6 +167,8 @@ async def test_ground_targets_are_requested_but_filtered_locally():
     assert provider.cycle_raw_aircraft == 2
     assert provider.cycle_airborne_aircraft == 1
     assert provider.cycle_empty_responses == 0
+    assert flights[0].aircraft_type_code == "B738"
+    assert flights[0].aircraft_kind == "plane"
     await client.aclose()
 
 

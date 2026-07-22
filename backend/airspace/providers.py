@@ -8,6 +8,8 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from .aircraft import AircraftKind, aircraft_kind
+
 
 @dataclass(frozen=True)
 class Region:
@@ -34,6 +36,8 @@ class NormalizedFlight:
     destination_city: str | None = None
     aircraft_type: str | None = None
     registration: str | None = None
+    aircraft_type_code: str | None = None
+    aircraft_kind: AircraftKind = "plane"
 
 
 class FlightProvider(Protocol):
@@ -140,6 +144,8 @@ def parse_fr24_feed_item(
         destination_city=string(12),
         airline=string(18),
         registration=string(9),
+        aircraft_type_code=string(8),
+        aircraft_kind=aircraft_kind(string(8), string(8)),
     )
 
 
@@ -157,6 +163,9 @@ def merge_fr24_details(flight: NormalizedFlight, payload: Any) -> NormalizedFlig
     callsign = _deep_get(payload, "identification", "callsign") or flight.callsign
     airline = _deep_get(payload, "airline", "name") or flight.airline
     aircraft_type = _deep_get(payload, "aircraft", "model", "text") or flight.aircraft_type
+    aircraft_type_code = (
+        _deep_get(payload, "aircraft", "model", "code") or flight.aircraft_type_code
+    )
     registration = _deep_get(payload, "aircraft", "registration") or flight.registration
     origin = _deep_get(payload, "airport", "origin", "position", "region", "city")
     destination = _deep_get(payload, "airport", "destination", "position", "region", "city")
@@ -171,6 +180,10 @@ def merge_fr24_details(flight: NormalizedFlight, payload: Any) -> NormalizedFlig
             "registration": str(registration).strip() or None
             if registration is not None
             else None,
+            "aircraft_type_code": str(aircraft_type_code).strip() or None
+            if aircraft_type_code is not None
+            else None,
+            "aircraft_kind": aircraft_kind(aircraft_type_code, aircraft_type),
             "origin_city": str(origin).strip() or None
             if origin is not None
             else flight.origin_city,
@@ -325,6 +338,11 @@ class FlightRadar24Provider:
                     "origin_city": detail.origin_city or flight.origin_city,
                     "destination_city": detail.destination_city or flight.destination_city,
                     "aircraft_type": detail.aircraft_type or flight.aircraft_type,
+                    "aircraft_type_code": detail.aircraft_type_code
+                    or flight.aircraft_type_code,
+                    "aircraft_kind": "helicopter"
+                    if "helicopter" in {detail.aircraft_kind, flight.aircraft_kind}
+                    else "plane",
                 }
             )
         if self._detail_budget <= 0:

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 import airspace.notifications as notification_module
+from airspace.aircraft import aircraft_kind
 from airspace.config import Settings
 from airspace.database import Base
 from airspace.models import (
@@ -20,7 +21,6 @@ from airspace.models import (
 from airspace.notifications import (
     PushDispatcher,
     in_quiet_hours,
-    is_helicopter,
     notification_payload,
 )
 from airspace.subscriptions import decrypt_subscription, encrypt_subscription
@@ -197,5 +197,5 @@ def test_helicopter_notification_uses_helicopter_symbol():
         sighting.snapshot["aircraft_type"] = "Airbus Helicopters H145"
         payload = notification_payload(sighting, "https://planes.example.com")
         assert payload["body"].startswith("📡 In Your AirSpace 🚁\n")
-    assert is_helicopter("R44")
-    assert not is_helicopter("B738")
+    assert aircraft_kind("R44") == "helicopter"
+    assert aircraft_kind("B738") == "plane"

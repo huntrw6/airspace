@@ -67,6 +67,13 @@ describe("live aircraft projection", () => {
     expect(markerRotation(undefined, true)).toBe(0);
   });
 
+  it("prefers backend classification while supporting legacy sightings", () => {
+    expect(isHelicopter("B738", "helicopter")).toBe(true);
+    expect(isHelicopter("R44", "plane")).toBe(false);
+    expect(isHelicopter("R44")).toBe(true);
+    expect(isHelicopter(undefined)).toBe(false);
+  });
+
   it("stops projection at the buffered map boundary from the observed position", () => {
     const observed = "2026-01-01T00:00:00Z";
     const flight = { latitude: 33, longitude: -118, heading: 90, ground_speed_knots: 450, observed_at: observed };
