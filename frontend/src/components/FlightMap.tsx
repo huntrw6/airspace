@@ -202,7 +202,7 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
         color: "#5ed2e8",
         fillColor: "#168ba4",
         fillOpacity: 0.1,
-      }).bindTooltip(location.label).addTo(map.current!);
+      }).addTo(map.current!);
       const marker = L.marker(circle.getLatLng(), {
         pane: "radarPane",
         interactive: false,
