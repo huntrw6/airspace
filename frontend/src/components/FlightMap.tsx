@@ -21,6 +21,13 @@ export function circleCrossingSeconds(
   return (radiusKm * 2) / (Number(groundSpeedKnots) * KNOTS_TO_KM_PER_SECOND);
 }
 
+export function mapProjectionSeconds(
+  notificationRadiusKm: number,
+  groundSpeedKnots: number | undefined,
+): number {
+  return circleCrossingSeconds(notificationRadiusKm + MAP_BUFFER_KM, groundSpeedKnots);
+}
+
 export function projectedPosition(
   flight: Sighting["flight"],
   nowMilliseconds = Date.now(),
@@ -107,10 +114,9 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
     });
     currentSightings.current.forEach((sighting) => {
       const location = locations.find((item) => item.id === sighting.location_id);
-      const projectionSeconds = circleCrossingSeconds(
-        location?.radius_km ?? 0,
-        sighting.flight.ground_speed_knots,
-      );
+      const projectionSeconds = location
+        ? mapProjectionSeconds(location.radius_km, sighting.flight.ground_speed_knots)
+        : 0;
       const position = projectedPosition(sighting.flight, Date.now(), projectionSeconds);
       if (!position) return;
       let marker = markers.current.get(sighting.id);

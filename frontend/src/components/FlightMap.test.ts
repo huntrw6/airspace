@@ -4,6 +4,7 @@ import {
   AIRPLANE_SYMBOL,
   circleCrossingSeconds,
   isHelicopter,
+  mapProjectionSeconds,
   markerRotation,
   projectedPosition,
 } from "./FlightMap";
@@ -41,10 +42,10 @@ describe("live aircraft projection", () => {
     expect(markerRotation(270, true)).toBe(0);
   });
 
-  it("stops projecting after the aircraft could cross the circle", () => {
+  it("stops projecting after the aircraft could cross the buffered map area", () => {
     const observed = "2026-01-01T00:00:00Z";
     const flight = { latitude: 33, longitude: -118, heading: 90, ground_speed_knots: 450, observed_at: observed };
-    const crossingSeconds = circleCrossingSeconds(8, flight.ground_speed_knots);
+    const crossingSeconds = mapProjectionSeconds(8, flight.ground_speed_knots);
     const atCrossing = projectedPosition(
       flight,
       Date.parse(observed) + crossingSeconds * 1000,
@@ -55,7 +56,7 @@ describe("live aircraft projection", () => {
       Date.parse(observed) + 300_000,
       crossingSeconds,
     );
-    expect(crossingSeconds).toBeCloseTo(69.1, 1);
+    expect(crossingSeconds).toBeCloseTo(86.4, 1);
     expect(longAfterCrossing![0]).toBeCloseTo(atCrossing![0], 8);
     expect(longAfterCrossing![1]).toBeCloseTo(atCrossing![1], 8);
   });
