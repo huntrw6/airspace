@@ -173,11 +173,11 @@ function radarSweepElement(): SVGSVGElement {
   }).join("");
 
   return radarOverlayElement(`
-    <circle class="radar-center-dot" cx="50" cy="50" r="1.25" />
     <g class="radar-sweep-vector">
       ${trailSegments}
       <line class="radar-beam" x1="50" y1="50" x2="50" y2="0" />
-    </g>`);
+    </g>
+    <circle class="radar-center-dot" cx="50" cy="50" r="1.25" />`);
 }
 
 export function FlightMap({ locations, sightings }: { locations: Location[]; sightings: Sighting[] }) {
