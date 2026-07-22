@@ -58,7 +58,11 @@ export function SightingCard({ sighting, expanded = false }: { sighting: Sightin
     <strong>{flight.origin_city || "Unknown origin"} → {flight.destination_city || "Unknown destination"}</strong>
     <p>{sighting.minimum_distance_km.toFixed(1)} km closest · {flight.altitude_ft?.toLocaleString() || "Altitude unavailable"} ft</p>
     <p>{compassHeading(flight.heading)} · {sighting.state.replace("_", " ")}</p>
-    <small>First detected {new Date(sighting.first_detected_at).toLocaleString()} · last seen {new Date(sighting.last_seen_at).toLocaleString()}</small>
+    <small>
+      First detected {new Date(sighting.first_detected_at).toLocaleString()}
+      <br />
+      Last seen {new Date(sighting.last_seen_at).toLocaleString()}
+    </small>
     {trackerUrl && <p><a href={trackerUrl} target="_blank" rel="noreferrer">Follow on Flightradar24 ↗</a></p>}
   </article>;
 }
