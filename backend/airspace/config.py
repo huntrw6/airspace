@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="AIRSPACE_", env_file=".env", extra="ignore")
     environment: str = "development"
     database_url: str = "sqlite:///./data/airspace.db"
-    public_url: str = "http://localhost:8000"
+    public_url: str = "http://localhost:7373"
     cookie_secure: bool = False
     session_days: int = Field(365, ge=1, le=730)
     admin_password: SecretStr = SecretStr("change-me")

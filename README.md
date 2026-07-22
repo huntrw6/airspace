@@ -19,7 +19,7 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-Open `http://SERVER:8000`. For public use, put Airspace behind an HTTPS reverse proxy and set
+Open `http://SERVER:7373`. For public use, put Airspace behind an HTTPS reverse proxy and set
 `AIRSPACE_PUBLIC_URL` to its URL. Secure browser notifications and installable-PWA behavior require
 HTTPS (localhost is the development exception).
 
@@ -50,7 +50,7 @@ discarded when the session closes.
 
 ## Reverse proxy (Nginx Proxy Manager)
 
-Create a Proxy Host to `http://airspace:8000` (or the Docker host and exposed port), enable WebSocket
+Create a Proxy Host to `http://airspace:7373` (or the Docker host and exposed port), enable WebSocket
 support, request a Let's Encrypt certificate, and enable Force SSL. Do not publish the container
 without TLS. Preserve the original client IP only from trusted proxy addresses; use network-level
 access controls for `/api/admin` in addition to the administrator credential.
@@ -86,7 +86,7 @@ hop count in more complex deployments; otherwise forwarded client addresses are 
 ignored to prevent header spoofing.
 
 Inspect with `docker compose ps`, `docker compose logs -f --tail=200 airspace`,
-`curl http://localhost:8000/health/live`, and `curl http://localhost:8000/health/ready`.
+`curl http://localhost:7373/health/live`, and `curl http://localhost:7373/health/ready`.
 
 ## Local development and tests
 

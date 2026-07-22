@@ -1,7 +1,7 @@
 # Docker deployment
 
 The multi-stage image builds the React frontend and installs the Python service, then runs as UID
-10001 with only port 8000 and `/app/data` writable. Compose persists SQLite in a named volume and
+10001 with only port 7373 and `/app/data` writable. Compose persists SQLite in a named volume and
 uses live/readiness health checks with `unless-stopped`. Configure HTTPS at a reverse proxy, set
 Secure cookies, use independent random admin/session secrets, back up while SQLite is quiescent, and
 test restoration before upgrades. Commands are maintained in the root README.
