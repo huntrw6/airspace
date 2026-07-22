@@ -31,7 +31,7 @@ export function MapPicker({
       {
         maxZoom: 19,
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+          '',
       },
     ).addTo(map);
     let marker: L.CircleMarker | undefined;
