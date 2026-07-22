@@ -1,3 +1,4 @@
+import logging
 import os
 
 os.environ.update(
@@ -8,6 +9,14 @@ os.environ.update(
 )
 from fastapi.testclient import TestClient
 from airspace.main import app
+
+
+def test_migrations_keep_worker_logger_enabled():
+    worker_logger = logging.getLogger("airspace.worker")
+    worker_logger.disabled = False
+    with TestClient(app):
+        pass
+    assert worker_logger.disabled is False
 
 
 def test_profile_is_private_and_persists_in_cookie():

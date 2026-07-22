@@ -58,7 +58,7 @@ logger.setLevel(logging.WARNING)
 async def lifespan(_: FastAPI):
     global polling_worker, polling_task, retention_worker, retention_task, geocoder, aircraft_photos
     upgrade_database()
-    # Alembic's fileConfig can disable application loggers while configuring migration output.
+    # Keep this explicit for deployments upgraded from versions whose migrations disabled it.
     logger.disabled = False
     settings = get_settings()
     geocoder = Geocoder(settings)
