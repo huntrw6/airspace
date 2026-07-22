@@ -84,6 +84,35 @@ def test_details_handle_missing_fields_without_erasing_position():
 
 
 @pytest.mark.asyncio
+async def test_regional_feed_requests_all_airborne_position_sources():
+    captured: httpx.Request | None = None
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal captured
+        captured = request
+        return httpx.Response(200, json={"full_count": 0})
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    provider = FlightRadar24Provider(
+        "https://feed.invalid", "https://details.invalid", client=client
+    )
+    region = next(iter(group_regions([LocationPoint("home", 38.5, -121.5)])))
+
+    assert await provider.get_flights_in_region(region) == []
+    assert captured is not None
+    params = captured.url.params
+    assert all(
+        params[source] == "1"
+        for source in ("faa", "satellite", "mlat", "flarm", "adsb", "air", "estimated", "gliders")
+    )
+    assert params["gnd"] == "0"
+    assert params["vehicles"] == "0"
+    assert params["limit"] == "5000"
+    assert params["bounds"] == (f"{region.north},{region.south},{region.west},{region.east}")
+    await client.aclose()
+
+
+@pytest.mark.asyncio
 async def test_detail_cache_reuses_successful_result():
     calls = 0
 

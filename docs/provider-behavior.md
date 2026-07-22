@@ -18,3 +18,10 @@ behind that contract. Both are undocumented and may change without notice. Posit
 are decoded in one parser, malformed aircraft are skipped individually, successful detail results
 have a bounded TTL, and failed details are not cached. HTTP 429 and upstream failures use bounded
 retry/backoff; diagnostics store error categories rather than payloads or viewing locations.
+
+Regional requests explicitly include every airborne reception class exposed by the
+FlightRadarAPI tracker configuration: ADS-B, MLAT, FAA, satellite, FLARM, gliders, and estimated
+positions. Ground targets and airport vehicles remain disabled because they are not useful for
+overhead-aircraft notifications. FlightRadarAPI itself wraps the same FlightRadar24 feed and
+click-handler endpoints, so calling it alongside this adapter would duplicate upstream traffic
+without creating an independent fallback.

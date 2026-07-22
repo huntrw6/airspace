@@ -180,6 +180,24 @@ class FlightRadar24Provider:
 
     provider_name = "flightradar24"
 
+    # FlightRadarAPI enables these position sources for its tracker requests.
+    # Ground targets and airport vehicles are intentionally excluded here.
+    _feed_params = {
+        "faa": "1",
+        "satellite": "1",
+        "mlat": "1",
+        "flarm": "1",
+        "adsb": "1",
+        "gnd": "0",
+        "air": "1",
+        "vehicles": "0",
+        "estimated": "1",
+        "gliders": "1",
+        "maxage": "14400",
+        "stats": "1",
+        "limit": "5000",
+    }
+
     def __init__(
         self,
         base_url: str,
@@ -246,7 +264,10 @@ class FlightRadar24Provider:
         payload = await bounded_retry(
             lambda: self._json(
                 f"{self._base_url}/zones/fcgi/feed.js",
-                {"bounds": f"{region.north},{region.south},{region.west},{region.east}"},
+                {
+                    **self._feed_params,
+                    "bounds": f"{region.north},{region.south},{region.west},{region.east}",
+                },
             )
         )
         if not isinstance(payload, dict):
