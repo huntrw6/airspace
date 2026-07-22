@@ -134,13 +134,22 @@ input:focus-visible {
   gap: 18px;
 }
 .flight {
-  background: #f5f0e8;
-  color: #112b3c;
+  background: #0b2942;
+  color: #f4f9fc;
+  border: 1px solid #28506b;
   border-radius: 20px;
   padding: 24px;
+  box-shadow: 0 14px 36px #020b1266;
 }
-.flight p {
-  color: #405867;
+.flight p,
+.flight small {
+  color: #c8dce8;
+}
+.flight a {
+  color: #75ddec;
+}
+.flight a:visited {
+  color: #b6c8ff;
 }
 .danger {
   background: #d14f4f;
