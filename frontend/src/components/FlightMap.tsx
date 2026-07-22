@@ -226,7 +226,7 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
       touchZoom: false,
     }).setView([first.latitude, first.longitude], 11);
     L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-      maxZoom: 10,
+      maxZoom: 20,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map.current);
     const radarPane = map.current.createPane("radarPane");
@@ -236,7 +236,7 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
     locations.forEach((location) => {
       const circle = L.circle([location.latitude, location.longitude], {
         radius: location.radius_km * 1000,
-        color: "#5ed2e8",
+        stroke: false,
         fillColor: "#168ba4",
         fillOpacity: 0.1,
       }).addTo(map.current!);
@@ -246,11 +246,18 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
       }).addTo(map.current!);
       viewingBounds.extend(circle.getBounds());
     });
-    map.current.fitBounds(viewingBounds, { padding: [0, 0], animate: false });
+    const fitViewingArea = () => {
+      map.current?.invalidateSize({ animate: false, pan: false });
+      map.current?.fitBounds(viewingBounds, { padding: [0, 0], animate: false });
+    };
+    fitViewingArea();
+    const resizeObserver = new ResizeObserver(fitViewingArea);
+    resizeObserver.observe(element.current);
     renderAircraft();
     const timer = window.setInterval(renderAircraft, 1000);
     return () => {
       window.clearInterval(timer);
+      resizeObserver.disconnect();
       markers.current.clear();
       map.current?.remove();
       map.current = null;
