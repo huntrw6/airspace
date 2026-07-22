@@ -1,10 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api";
+import { AppHeader, type ConnectionState } from "./AppHeader";
 
 export function AdminApp() {
   const [password, setPassword] = useState("");
   const [summary, setSummary] = useState<Record<string, unknown> | null>(null);
   const [message, setMessage] = useState("");
+  const [connectionState, setConnectionState] = useState<ConnectionState>("checking");
+  useEffect(() => {
+    let active = true;
+    const checkHealth = () => {
+      void api.status().then((status) => {
+        if (active) setConnectionState(status.provider === "healthy" ? "live" : "disconnected");
+      }).catch(() => {
+        if (active) setConnectionState("disconnected");
+      });
+    };
+    checkHealth();
+    const timer = window.setInterval(checkHealth, 15_000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, []);
   async function load() {
     try {
       setSummary(await api.adminSummary(password));
@@ -17,9 +35,7 @@ export function AdminApp() {
   }
   return (
     <main>
-      <header>
-        <span className="brand">AirSpace Admin</span>
-      </header>
+      <AppHeader connectionState={connectionState} />
       <section>
         <h1>Operations</h1>
         <p>

@@ -7,6 +7,7 @@ import { LocationSettings } from "./components/LocationSettings";
 import { AdminApp } from "./components/AdminApp";
 import { AddressSearch } from "./components/AddressSearch";
 import { SightingCard } from "./components/SightingCard";
+import { AppHeader, type ConnectionState } from "./components/AppHeader";
 import { isLiveSighting } from "./sightings";
 import "./style.css";
 const presets = {
@@ -39,8 +40,7 @@ function App() {
     } | null>(null),
     [radius, setRadius] = useState(8),
     [adding, setAdding] = useState(false),
-    [status, setStatus] = useState("not_configured"),
-    [connectionState, setConnectionState] = useState<"checking" | "live" | "disconnected">("checking"),
+    [connectionState, setConnectionState] = useState<ConnectionState>("checking"),
     [sightings, setSightings] = useState<Sighting[]>([]);
   const failedHealthChecks = useRef(0);
   useEffect(() => {
@@ -62,7 +62,6 @@ function App() {
     const checkHealth = () => {
       void api.status().then((next) => {
         if (!active) return;
-        setStatus(next.provider);
         if (next.provider === "healthy") {
           failedHealthChecks.current = 0;
           setConnectionState("live");
@@ -268,21 +267,14 @@ function App() {
   if (loading)
     return (
       <main>
+        <AppHeader connectionState={connectionState} />
         <p>Opening AirSpace…</p>
       </main>
     );
   if (!profile || profile.locations.length === 0) {
     return (
       <main>
-        <header>
-          <span className="brand">AirSpace</span>
-          <span className="status">
-            ●{" "}
-            {status === "healthy"
-              ? "Live flights"
-              : "Service status: " + status}
-          </span>
-        </header>
+        <AppHeader connectionState={connectionState} />
         <section className="hero">
           <p className="eyebrow">PLANES, MADE FRIENDLY</p>
           <h1>
@@ -381,13 +373,7 @@ function App() {
   const history = sightings.filter((s) => s.state !== "held" && !isLiveSighting(s));
   return (
     <main>
-      <header>
-        <span className="brand dashboard-brand">YOUR AIRSPACE</span>
-        <span className={`status status-${connectionState}`} role="status">
-          <span className="status-dot" aria-hidden="true">●</span>{" "}
-          {connectionState === "disconnected" ? "DISCONNECTED" : connectionState === "live" ? "LIVE" : "CONNECTING"}
-        </span>
-      </header>
+      <AppHeader connectionState={connectionState} />
       <section className="dashboard-section">
         <h1>{nearby.length ? "A plane is nearby" : "The sky is quiet"}</h1>
         <FlightMap locations={profile.locations} sightings={nearby} />
