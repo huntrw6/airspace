@@ -382,7 +382,7 @@ function App() {
   return (
     <main>
       <header>
-        <span className="brand">YOUR AIRSPACE</span>
+        <span className="brand dashboard-brand">YOUR AIRSPACE</span>
         <span className={`status status-${connectionState}`} role="status">
           ● {connectionState === "disconnected" ? "DISCONNECTED" : connectionState === "live" ? "LIVE" : "CONNECTING"}
         </span>

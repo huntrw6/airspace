@@ -31,6 +31,9 @@ header {
   font-weight: 900;
   letter-spacing: 0.22em;
 }
+.dashboard-brand {
+  color: #8cecff;
+}
 .status {
   font-size: 0.82rem;
   font-weight: 850;
