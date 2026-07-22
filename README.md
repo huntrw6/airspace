@@ -16,34 +16,56 @@ airspace.
 
 ## Portainer stack
 
-The easiest deployment is a Portainer **Git repository stack**:
+In Portainer, choose **Stacks → Add stack → Web editor**. Open the Compose file below, copy it into
+the editor, and update the public URL, administrator password, VAPID email, and proxy settings for
+your deployment. Then select **Deploy the stack**.
 
-1. In Portainer, open **Stacks** and choose **Add stack**.
-2. Select **Repository**.
-3. Use `https://github.com/huntrw6/airspace.git` as the repository URL.
-4. Set the compose path to `docker-compose.yml`.
-5. Add the environment variables below, then deploy the stack.
+<details>
+<summary><strong>Open the complete docker-compose.yml</strong></summary>
 
-```env
-AIRSPACE_PUBLIC_URL=https://planes.example.com
-AIRSPACE_COOKIE_SECURE=true
-AIRSPACE_ADMIN_PASSWORD=replace-with-a-long-random-password
-AIRSPACE_VAPID_SUBJECT=mailto:admin@example.com
-AIRSPACE_TRUSTED_PROXY_HOPS=1
+```yaml
+services:
+  airspace:
+    container_name: airspace
+    image: ${AIRSPACE_IMAGE:-ghcr.io/huntrw6/airspace:latest}
+    restart: unless-stopped
+    environment:
+      AIRSPACE_ENVIRONMENT: production
+      AIRSPACE_DATABASE_URL: sqlite:////app/data/airspace.db
+      AIRSPACE_PUBLIC_URL: ${AIRSPACE_PUBLIC_URL:-http://localhost:7373}
+      AIRSPACE_COOKIE_SECURE: ${AIRSPACE_COOKIE_SECURE:-false}
+      AIRSPACE_ADMIN_PASSWORD: ${AIRSPACE_ADMIN_PASSWORD:-ReplaceThisWithSecretAdminPassword}
+      AIRSPACE_SESSION_PEPPER: ${AIRSPACE_SESSION_PEPPER:-}
+      AIRSPACE_PROVIDER_ENABLED: ${AIRSPACE_PROVIDER_ENABLED:-true}
+      AIRSPACE_POLL_INTERVAL_SECONDS: ${AIRSPACE_POLL_INTERVAL_SECONDS:-20}
+      AIRSPACE_PROVIDER_DETAIL_REQUESTS_PER_CYCLE: ${AIRSPACE_PROVIDER_DETAIL_REQUESTS_PER_CYCLE:-3}
+      AIRSPACE_TRUSTED_PROXY_HOPS: ${AIRSPACE_TRUSTED_PROXY_HOPS:-0}
+      AIRSPACE_GEOCODING_USER_AGENT: ${AIRSPACE_GEOCODING_USER_AGENT:-AirSpace/0.1 (self-hosted)}
+      AIRSPACE_AIRCRAFT_PHOTOS_ENABLED: ${AIRSPACE_AIRCRAFT_PHOTOS_ENABLED:-true}
+      AIRSPACE_VAPID_PUBLIC_KEY: ${AIRSPACE_VAPID_PUBLIC_KEY:-}
+      AIRSPACE_VAPID_PRIVATE_KEY: ${AIRSPACE_VAPID_PRIVATE_KEY:-}
+      AIRSPACE_VAPID_SUBJECT: ${AIRSPACE_VAPID_SUBJECT:-mailto:admin@example.com}
+    ports:
+      - "${AIRSPACE_PORT:-7373}:7373"
+    volumes:
+      - airspace-data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:7373/health/ready',timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  airspace-data:
 ```
 
-The included [Docker Compose file](docker-compose.yml) exposes AirSpace on port `7373` and keeps its
-database, notification keys, and anonymous sessions in a persistent Docker volume. VAPID keys and
-the session pepper are generated automatically on first startup.
+</details>
 
-The compose file uses `ghcr.io/huntrw6/airspace:latest` by default. To use Docker Hub, add:
-
-```env
-AIRSPACE_IMAGE=huntrw6/airspace:latest
-```
-
-Prefer Portainer's web editor? Copy the contents of [docker-compose.yml](docker-compose.yml) into a
-new **Web editor** stack and use the same environment variables.
+The stack exposes AirSpace on port `7373` and stores its database, notification keys, and anonymous
+sessions in the persistent `airspace-data` volume. VAPID keys and the session pepper are generated
+automatically on first startup. To pull from Docker Hub instead of GHCR, replace the image line with
+`image: huntrw6/airspace:latest`.
 
 ## Docker Compose
 
