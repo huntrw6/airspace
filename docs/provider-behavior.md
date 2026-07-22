@@ -8,6 +8,11 @@ bounded exponential backoff with jitter, respect rate limits, and cache successf
 TTL while retrying failures later. FlightRadar24 access is unofficial and may change or stop; no
 access control or anti-bot mechanism may be bypassed.
 
+Rate-limited requests fail immediately instead of being amplified by retries. The adapter honors a
+bounded `Retry-After` cooldown independently for the position and detail hosts. Detail enrichment
+is limited to `AIRSPACE_PROVIDER_DETAIL_REQUESTS_PER_CYCLE` new lookups per polling cycle (three by
+default); cached details do not consume that budget, and regional positions remain the priority.
+
 The current `FlightRadar24Provider` uses the public regional feed and click-handler endpoints
 behind that contract. Both are undocumented and may change without notice. Positional feed arrays
 are decoded in one parser, malformed aircraft are skipped individually, successful detail results

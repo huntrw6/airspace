@@ -8,6 +8,7 @@ from airspace.providers import (
     FlightRadar24Provider,
     NormalizedFlight,
     ProviderError,
+    ProviderRateLimited,
     merge_fr24_details,
     parse_flight_record,
     parse_fr24_feed_item,
@@ -126,4 +127,53 @@ async def test_failed_detail_lookup_is_not_cached(monkeypatch):
         await provider.enrich(base)
     assert (await provider.enrich(base)).airline == "Recovered Air"
     assert calls == 4
+    await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_rate_limit_fails_fast_and_enters_host_cooldown():
+    calls = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        return httpx.Response(429, headers={"Retry-After": "120"})
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    provider = FlightRadar24Provider(
+        "https://feed.invalid", "https://details.invalid", client=client
+    )
+    region = next(iter(group_regions([LocationPoint("home", 38.5, -121.5)])))
+    with pytest.raises(ProviderRateLimited, match="cooling down 120"):
+        await provider.get_flights_in_region(region)
+    with pytest.raises(ProviderRateLimited, match="cooling down"):
+        await provider.get_flights_in_region(region)
+    assert calls == 1
+    await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_detail_requests_are_budgeted_per_poll_cycle():
+    calls = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        return httpx.Response(200, json={"airline": {"name": "Detailed Air"}})
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    provider = FlightRadar24Provider(
+        "https://feed.invalid",
+        "https://details.invalid",
+        detail_requests_per_cycle=1,
+        client=client,
+    )
+    now = datetime.now(timezone.utc)
+    first = NormalizedFlight("one", "provider-one", 1, 2, now)
+    second = NormalizedFlight("two", "provider-two", 1, 2, now)
+    assert (await provider.enrich(first)).airline == "Detailed Air"
+    assert (await provider.enrich(second)).airline is None
+    provider.begin_poll_cycle()
+    assert (await provider.enrich(second)).airline == "Detailed Air"
+    assert calls == 2
     await client.aclose()

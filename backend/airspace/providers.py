@@ -1,8 +1,10 @@
 import asyncio
 import random
+import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Protocol
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -47,7 +49,9 @@ class ProviderError(RuntimeError):
 
 
 class ProviderRateLimited(ProviderError):
-    pass
+    def __init__(self, message: str, retry_after_seconds: int = 60) -> None:
+        super().__init__(message)
+        self.retry_after_seconds = retry_after_seconds
 
 
 async def bounded_retry(operation: Any, attempts: int = 3, base_delay: float = 0.25) -> Any:
@@ -55,6 +59,8 @@ async def bounded_retry(operation: Any, attempts: int = 3, base_delay: float = 0
     for attempt in range(attempts):
         try:
             return await operation()
+        except ProviderRateLimited:
+            raise
         except (TimeoutError, ProviderError) as error:
             last = error
             if attempt + 1 < attempts:
@@ -180,6 +186,7 @@ class FlightRadar24Provider:
         details_url: str,
         timeout_seconds: float = 10,
         detail_ttl_seconds: int = 900,
+        detail_requests_per_cycle: int = 3,
         client: httpx.AsyncClient | None = None,
     ) -> None:
         self._base_url = base_url.rstrip("/")
@@ -192,6 +199,12 @@ class FlightRadar24Provider:
         self._owns_client = client is None
         self._detail_ttl = timedelta(seconds=detail_ttl_seconds)
         self._details: dict[str, tuple[datetime, NormalizedFlight]] = {}
+        self._detail_budget_default = detail_requests_per_cycle
+        self._detail_budget = detail_requests_per_cycle
+        self._blocked_until: dict[str, float] = {}
+
+    def begin_poll_cycle(self) -> None:
+        self._detail_budget = self._detail_budget_default
 
     async def close(self) -> None:
         if self._owns_client:
@@ -201,9 +214,25 @@ class FlightRadar24Provider:
         return feature in {"regional_positions", "flight_details"}
 
     async def _json(self, url: str, params: dict[str, str]) -> Any:
+        host = urlsplit(url).netloc
+        remaining = self._blocked_until.get(host, 0) - time.monotonic()
+        if remaining > 0:
+            raise ProviderRateLimited(
+                f"FlightRadar24 host is cooling down for {remaining:.0f} seconds",
+                max(1, round(remaining)),
+            )
         response = await self._client.get(url, params=params)
         if response.status_code == 429:
-            raise ProviderRateLimited("FlightRadar24 rate limited the request")
+            try:
+                retry_after = int(response.headers.get("Retry-After", "60"))
+            except ValueError:
+                retry_after = 60
+            retry_after = min(900, max(30, retry_after))
+            self._blocked_until[host] = time.monotonic() + retry_after
+            raise ProviderRateLimited(
+                f"FlightRadar24 rate limited the request; cooling down {retry_after} seconds",
+                retry_after,
+            )
         if response.status_code >= 500:
             raise ProviderError(f"FlightRadar24 upstream error ({response.status_code})")
         if response.status_code != 200:
@@ -250,6 +279,9 @@ class FlightRadar24Provider:
                     "aircraft_type": detail.aircraft_type or flight.aircraft_type,
                 }
             )
+        if self._detail_budget <= 0:
+            return flight
+        self._detail_budget -= 1
         payload = await bounded_retry(
             lambda: self._json(f"{self._details_url}/clickhandler/", {"flight": provider_id})
         )

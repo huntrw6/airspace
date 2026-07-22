@@ -48,6 +48,9 @@ class PollingWorker:
 
     async def poll_once(self) -> None:
         now = datetime.now(timezone.utc)
+        begin_cycle = getattr(self.provider, "begin_poll_cycle", None)
+        if begin_cycle:
+            begin_cycle()
         with SessionLocal() as db:
             health = db.get(ProviderHealth, self.provider.provider_name)
             if health is None:
@@ -132,5 +135,6 @@ def build_worker(settings: Settings) -> tuple[PollingWorker, FlightRadar24Provid
         settings.provider_details_url,
         settings.provider_timeout_seconds,
         settings.provider_detail_ttl_seconds,
+        settings.provider_detail_requests_per_cycle,
     )
     return PollingWorker(provider, settings), provider

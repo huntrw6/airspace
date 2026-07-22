@@ -518,6 +518,7 @@ def admin_summary(db: Session = Depends(get_db), settings: Settings = Depends(ge
         },
         "configuration": {
             "poll_interval_seconds": settings.poll_interval_seconds,
+            "provider_detail_requests_per_cycle": settings.provider_detail_requests_per_cycle,
             "max_regions_per_cycle": settings.max_regions_per_cycle,
             "max_locations_per_profile": settings.max_locations_per_profile,
             "max_subscriptions_per_profile": settings.max_subscriptions_per_profile,
