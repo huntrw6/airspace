@@ -103,6 +103,11 @@ export const api = {
       `/api/geocoding/search?q=${encodeURIComponent(query)}`,
     ),
   pushKey: () => request<{ public_key: string }>("/api/push-key"),
+  reportPushDiagnostic: (diagnostic: Record<string, unknown>) =>
+    request<{ diagnostic_id: string }>("/api/push-diagnostics", {
+      method: "POST",
+      body: JSON.stringify(diagnostic),
+    }),
   registerPush: (subscription: PushSubscription) =>
     request<{ status: string }>("/api/push-subscriptions", {
       method: "POST",

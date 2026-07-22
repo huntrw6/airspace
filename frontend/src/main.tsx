@@ -172,26 +172,49 @@ function App() {
       );
       return;
     }
+    let stage = "service-worker";
+    let registration: ServiceWorkerRegistration | undefined;
+    let publicKeyLength: number | undefined;
     try {
-      const registration = await navigator.serviceWorker.ready;
+      registration = await navigator.serviceWorker.ready;
+      stage = "public-key";
       const { public_key } = await api.pushKey();
+      publicKeyLength = public_key.length;
       const padding = "=".repeat((4 - (public_key.length % 4)) % 4),
         raw = atob(
           (public_key + padding).replace(/-/g, "+").replace(/_/g, "/"),
         ),
         key = Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+      stage = "push-service-subscribe";
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: key,
       });
+      stage = "airspace-registration";
       await api.registerPush(subscription);
       setStep(5);
     } catch (e) {
-      setError(
-        e instanceof Error
-          ? e.message
-          : "Plane notifications could not be enabled.",
-      );
+      const errorName = e instanceof DOMException || e instanceof Error ? e.name : "UnknownError";
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      const diagnostic = {
+        stage,
+        error_name: errorName,
+        error_message: errorMessage,
+        permission: Notification.permission,
+        secure_context: window.isSecureContext,
+        service_worker_state: registration?.active?.state || null,
+        push_manager_available: Boolean(registration && "pushManager" in registration),
+        public_key_length: publicKeyLength,
+        platform: navigator.userAgent,
+      };
+      console.error("Airspace push diagnostic", diagnostic, e);
+      let diagnosticId = "not recorded";
+      try {
+        diagnosticId = (await api.reportPushDiagnostic(diagnostic)).diagnostic_id;
+      } catch (reportError) {
+        console.error("Airspace could not report push diagnostic", reportError);
+      }
+      setError(`Push failed at ${stage}: ${errorName}: ${errorMessage} (diagnostic ${diagnosticId})`);
     }
   }
   if (loading)

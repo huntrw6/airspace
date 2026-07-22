@@ -1,6 +1,7 @@
 import hashlib
 import asyncio
 import json
+import logging
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
@@ -25,7 +26,14 @@ from .models import (
     PushSubscription,
     Sighting,
 )
-from .schemas import LocationCreate, LocationView, ProfileCreate, ProfileView, PushCreate
+from .schemas import (
+    LocationCreate,
+    LocationView,
+    ProfileCreate,
+    ProfileView,
+    PushCreate,
+    PushDiagnostic,
+)
 from .subscriptions import encrypt_subscription
 from .notifications import PushDispatcher
 from .worker import PollingWorker, build_worker
@@ -40,12 +48,16 @@ retention_worker: RetentionWorker | None = None
 retention_task: asyncio.Task | None = None
 rate_limiter = SlidingWindowLimiter()
 geocoder: Geocoder | None = None
+logger = logging.getLogger("airspace.push")
+logger.setLevel(logging.WARNING)
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     global polling_worker, polling_task, retention_worker, retention_task, geocoder
     upgrade_database()
+    # Alembic's fileConfig can disable application loggers while configuring migration output.
+    logger.disabled = False
     settings = get_settings()
     geocoder = Geocoder(settings)
     provider = None
@@ -327,6 +339,29 @@ def push_key(settings: Settings = Depends(get_settings)):
     if not settings.vapid_public_key:
         raise HTTPException(503, "Plane notifications are not configured on this server.")
     return {"public_key": settings.vapid_public_key}
+
+
+@app.post("/api/push-diagnostics", status_code=202)
+def record_push_diagnostic(
+    body: PushDiagnostic,
+    _: Profile = Depends(current_profile),
+) -> dict[str, str]:
+    diagnostic_id = str(uuid.uuid4())
+    logger.warning(
+        "Browser push diagnostic id=%s stage=%s error=%s message=%s permission=%s "
+        "secure=%s worker=%s push_manager=%s key_length=%s platform=%s",
+        diagnostic_id,
+        body.stage,
+        body.error_name,
+        body.error_message,
+        body.permission,
+        body.secure_context,
+        body.service_worker_state,
+        body.push_manager_available,
+        body.public_key_length,
+        body.platform,
+    )
+    return {"diagnostic_id": diagnostic_id}
 
 
 @app.post("/api/push-subscriptions/test")

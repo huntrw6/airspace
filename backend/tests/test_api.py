@@ -68,3 +68,24 @@ def test_onboarding_directional_location_through_request_host():
             headers={"Origin": "https://planes.example.test"},
         )
         assert location.status_code == 201, location.text
+
+
+def test_browser_push_diagnostic_is_accepted_without_secrets():
+    with TestClient(app) as client:
+        client.post("/api/profiles", json={"timezone": "UTC", "units": "metric"})
+        response = client.post(
+            "/api/push-diagnostics",
+            json={
+                "stage": "push-service-subscribe",
+                "error_name": "AbortError",
+                "error_message": "Registration failed - push service error",
+                "permission": "granted",
+                "secure_context": True,
+                "service_worker_state": "activated",
+                "push_manager_available": True,
+                "public_key_length": 87,
+                "platform": "Test browser",
+            },
+        )
+        assert response.status_code == 202
+        assert response.json()["diagnostic_id"]

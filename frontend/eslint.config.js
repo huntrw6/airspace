@@ -18,6 +18,7 @@ export default tseslint.config(
         PushSubscription: "readonly",
         EventSource: "readonly",
         MessageEvent: "readonly",
+        DOMException: "readonly",
         HTMLElement: "readonly",
         HTMLInputElement: "readonly",
         HTMLButtonElement: "readonly",

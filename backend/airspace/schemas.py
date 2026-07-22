@@ -58,3 +58,15 @@ class PushCreate(BaseModel):
     endpoint: str = Field(min_length=16, max_length=2048)
     keys: dict[str, str]
     platform: str | None = Field(None, max_length=120)
+
+
+class PushDiagnostic(BaseModel):
+    stage: str = Field(max_length=40)
+    error_name: str = Field(max_length=80)
+    error_message: str = Field(max_length=500)
+    permission: str = Field(max_length=30)
+    secure_context: bool
+    service_worker_state: str | None = Field(None, max_length=40)
+    push_manager_available: bool
+    public_key_length: int | None = Field(None, ge=0, le=1000)
+    platform: str = Field(max_length=300)
