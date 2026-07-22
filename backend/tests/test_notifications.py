@@ -164,8 +164,8 @@ def test_notification_payload_uses_friendly_multiline_format():
             altitude_ft=39000,
         )
         payload = notification_payload(sighting, "https://planes.example.com")
-        assert payload["title"] == (
-            "📡 In Your AirSpace ✈️\nHawaiian Airlines ASA836\n"
-            "Honolulu ➤ Phoenix\nAirbus A330 at 39,000 feet"
+        assert payload["title"] == "📡 In Your AirSpace ✈️"
+        assert payload["body"] == (
+            "Hawaiian Airlines ASA836\nHonolulu ➤ Phoenix\n"
+            "Airbus A330 at 39,000 feet"
         )
-        assert "body" not in payload
