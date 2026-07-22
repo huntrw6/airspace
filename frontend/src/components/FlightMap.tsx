@@ -226,8 +226,8 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
       touchZoom: false,
     }).setView([first.latitude, first.longitude], 11);
     L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      maxZoom: 10,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map.current);
     const radarPane = map.current.createPane("radarPane");
     radarPane.style.zIndex = "450";
