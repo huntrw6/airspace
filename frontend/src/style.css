@@ -48,7 +48,7 @@ header {
 }
 .status-live .status-dot {
   display: inline-block;
-  animation: live-position-update 1s ease-in-out infinite;
+  animation: live-position-update 2.5s steps(1, end) infinite;
 }
 .status-checking,
 .status-disconnected {
@@ -373,12 +373,12 @@ summary {
   }
 }
 @keyframes live-position-update {
-  0%,
+  0% {
+    opacity: 0.18;
+  }
+  10%,
   100% {
     opacity: 1;
-  }
-  50% {
-    opacity: 0.18;
   }
 }
 @media (prefers-reduced-motion: reduce) {
