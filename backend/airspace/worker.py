@@ -32,6 +32,10 @@ class PollingWorker:
         self.last_cycle_finished_at: datetime | None = None
         self.active_region_count = 0
         self.deferred_region_count = 0
+        self.last_feed_request_count = 0
+        self.last_raw_aircraft_count = 0
+        self.last_airborne_aircraft_count = 0
+        self.last_empty_response_count = 0
         self._region_offset = 0
 
     async def run(self) -> None:
@@ -137,6 +141,14 @@ class PollingWorker:
                 health.status = "unavailable" if locations else "idle"
             health.last_error = ", ".join(errors[:3]) or None
             db.commit()
+        self.last_feed_request_count = getattr(self.provider, "cycle_feed_requests", 0)
+        self.last_raw_aircraft_count = getattr(self.provider, "cycle_raw_aircraft", 0)
+        self.last_airborne_aircraft_count = getattr(
+            self.provider, "cycle_airborne_aircraft", 0
+        )
+        self.last_empty_response_count = getattr(
+            self.provider, "cycle_empty_responses", 0
+        )
         await self.dispatcher.deliver_pending()
         self.last_cycle_finished_at = datetime.now(timezone.utc)
 

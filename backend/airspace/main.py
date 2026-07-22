@@ -230,6 +230,14 @@ def api_status(db: Session = Depends(get_db), settings: Settings = Depends(get_s
         else "stopped",
         "active_regions": polling_worker.active_region_count if polling_worker else 0,
         "deferred_regions": polling_worker.deferred_region_count if polling_worker else 0,
+        "last_feed_requests": polling_worker.last_feed_request_count if polling_worker else 0,
+        "last_raw_aircraft": polling_worker.last_raw_aircraft_count if polling_worker else 0,
+        "last_airborne_aircraft": (
+            polling_worker.last_airborne_aircraft_count if polling_worker else 0
+        ),
+        "last_empty_feed_responses": (
+            polling_worker.last_empty_response_count if polling_worker else 0
+        ),
     }
 
 

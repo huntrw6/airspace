@@ -187,16 +187,17 @@ class FlightRadar24Provider:
     provider_name = "flightradar24"
 
     # FlightRadarAPI enables these position sources for its tracker requests.
-    # Ground targets and airport vehicles are intentionally excluded here.
+    # Request every target because FR24 intermittently returns an empty feed when
+    # gnd=0 and vehicles=0 are combined. Ground targets are filtered locally.
     _feed_params = {
         "faa": "1",
         "satellite": "1",
         "mlat": "1",
         "flarm": "1",
         "adsb": "1",
-        "gnd": "0",
+        "gnd": "1",
         "air": "1",
-        "vehicles": "0",
+        "vehicles": "1",
         "estimated": "1",
         "gliders": "1",
         "maxage": "14400",
@@ -226,9 +227,17 @@ class FlightRadar24Provider:
         self._detail_budget_default = detail_requests_per_cycle
         self._detail_budget = detail_requests_per_cycle
         self._blocked_until: dict[str, float] = {}
+        self.cycle_feed_requests = 0
+        self.cycle_raw_aircraft = 0
+        self.cycle_airborne_aircraft = 0
+        self.cycle_empty_responses = 0
 
     def begin_poll_cycle(self) -> None:
         self._detail_budget = self._detail_budget_default
+        self.cycle_feed_requests = 0
+        self.cycle_raw_aircraft = 0
+        self.cycle_airborne_aircraft = 0
+        self.cycle_empty_responses = 0
 
     async def close(self) -> None:
         if self._owns_client:
@@ -272,6 +281,7 @@ class FlightRadar24Provider:
         payload = await bounded_retry(
             lambda: self._json(url, {**self._feed_params, "bounds": bounds})
         )
+        self.cycle_feed_requests += 1
         if not isinstance(payload, dict):
             raise ProviderError("FlightRadar24 feed was not an object")
         metadata_keys = {"full_count", "version", "stats", "copyright"}
@@ -280,17 +290,23 @@ class FlightRadar24Provider:
             isinstance(visible, dict) and visible and not any(visible.values())
         )
         if metadata_only:
+            self.cycle_empty_responses += 1
             payload = await bounded_retry(lambda: self._json(url, {"bounds": bounds}))
+            self.cycle_feed_requests += 1
             if not isinstance(payload, dict):
                 raise ProviderError("FlightRadar24 fallback feed was not an object")
         flights: list[NormalizedFlight] = []
         for provider_id, values in payload.items():
-            if provider_id in {"full_count", "version", "stats"}:
+            if provider_id in {"full_count", "version", "stats", "copyright"}:
+                continue
+            self.cycle_raw_aircraft += 1
+            if isinstance(values, list) and len(values) > 14 and bool(values[14]):
                 continue
             try:
                 flights.append(parse_fr24_feed_item(str(provider_id), values))
             except ProviderError:
                 continue
+        self.cycle_airborne_aircraft += len(flights)
         return flights
 
     async def enrich(self, flight: NormalizedFlight) -> NormalizedFlight:

@@ -130,10 +130,41 @@ async def test_regional_feed_requests_all_airborne_position_sources():
         params[source] == "1"
         for source in ("faa", "satellite", "mlat", "flarm", "adsb", "air", "estimated", "gliders")
     )
-    assert params["gnd"] == "0"
-    assert params["vehicles"] == "0"
+    assert params["gnd"] == "1"
+    assert params["vehicles"] == "1"
     assert params["limit"] == "5000"
     assert params["bounds"] == (f"{region.north},{region.south},{region.west},{region.east}")
+    await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_ground_targets_are_requested_but_filtered_locally():
+    airborne = [
+        "airborne", 47.4, -122.3, 90, 10_000, 250, "", "radar", "B738",
+        "N123", 1_700_000_000, "SEA", "SFO", "AS1", 0,
+    ]
+    ground = [
+        "ground", 47.4, -122.3, 0, 0, 0, "", "radar", "B738",
+        "N456", 1_700_000_000, "SEA", "SFO", "AS2", 1,
+    ]
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200, json={"full_count": 2, "air": airborne, "ground": ground}
+        )
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    provider = FlightRadar24Provider(
+        "https://feed.invalid", "https://details.invalid", client=client
+    )
+    provider.begin_poll_cycle()
+    region = next(iter(group_regions([LocationPoint("home", 47.4, -122.3)])))
+    flights = await provider.get_flights_in_region(region)
+    assert [flight.flight_id for flight in flights] == ["airborne"]
+    assert provider.cycle_feed_requests == 1
+    assert provider.cycle_raw_aircraft == 2
+    assert provider.cycle_airborne_aircraft == 1
+    assert provider.cycle_empty_responses == 0
     await client.aclose()
 
 
