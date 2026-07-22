@@ -35,7 +35,7 @@ export function flightradar24Url(sighting: Sighting): string | null {
 export function SightingCard({ sighting, expanded = false }: { sighting: Sighting; expanded?: boolean }) {
   const flight = sighting.flight;
   const trackerUrl = flightradar24Url(sighting);
-  const aircraftSymbol = isHelicopter(flight.aircraft_kind) ? "🚁" : "✈️";
+  const aircraftSymbol = isHelicopter(flight.aircraft_type) ? "🚁" : "✈️";
   const [photo, setPhoto] = useState<AircraftPhoto | null>(null);
   useEffect(() => {
     let active = true;

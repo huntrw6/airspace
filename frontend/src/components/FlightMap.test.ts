@@ -58,10 +58,10 @@ describe("live aircraft projection", () => {
     expect(markerRotation(0, false)).toBe(-90);
   });
 
-  it("uses only the backend aircraft kind for helicopter presentation", () => {
-    expect(isHelicopter("helicopter")).toBe(true);
-    expect(isHelicopter("plane")).toBe(false);
-    expect(isHelicopter(undefined)).toBe(false);
+  it("recognizes helicopter codes and descriptions", () => {
+    expect(isHelicopter("R44")).toBe(true);
+    expect(isHelicopter("Airbus Helicopters H145")).toBe(true);
+    expect(isHelicopter("B738")).toBe(false);
     expect(markerRotation(270, true)).toBe(0);
     expect(markerRotation(45, true)).toBe(0);
     expect(markerRotation(undefined, true)).toBe(0);

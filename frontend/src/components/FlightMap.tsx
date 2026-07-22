@@ -101,8 +101,21 @@ export function projectedPosition(
   return [(lat2 * 180) / Math.PI, ((((lon2 * 180) / Math.PI) + 540) % 360) - 180];
 }
 
-export function isHelicopter(aircraftKind?: string): boolean {
-  return aircraftKind === "helicopter";
+const HELICOPTER_CODES = new Set([
+  "R22", "R44", "R66", "B06", "B212", "B412", "B427", "B429", "EC20", "EC25",
+  "EC30", "EC35", "EC45", "EC55", "H125", "H130", "H135", "H145", "H160", "H175",
+  "H225", "AS32", "AS50", "AS55", "AS65", "S61", "S64", "S65", "S70", "S76", "S92",
+  "A109", "A119", "A139", "A149", "A169", "A189", "MI2", "MI6", "MI8", "MI24", "MI26",
+  "KA27", "KA29", "KA31", "KA32", "UH1", "H60", "CH47", "AH64", "V22",
+]);
+
+export function isHelicopter(aircraftType?: string): boolean {
+  if (!aircraftType) return false;
+  const normalized = aircraftType.trim().toUpperCase();
+  return (
+    HELICOPTER_CODES.has(normalized) ||
+    /HELICOPTER|ROTORCRAFT|ROTOR CRAFT/.test(normalized)
+  );
 }
 
 export function markerRotation(heading: number | undefined, helicopter: boolean): number {
@@ -116,8 +129,8 @@ export function flightMarkerLabel(flight: Sighting["flight"]): string {
   return [airline, callsign].filter(Boolean).join(" ") || "Unidentified aircraft";
 }
 
-function aircraftIcon(heading?: number, aircraftKind?: string): L.DivIcon {
-  const helicopter = isHelicopter(aircraftKind);
+function aircraftIcon(heading?: number, aircraftType?: string): L.DivIcon {
+  const helicopter = isHelicopter(aircraftType);
   const rotation = markerRotation(heading, helicopter);
   return L.divIcon({
     className: "aircraft-marker",
@@ -194,14 +207,14 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
       let marker = markers.current.get(sighting.id);
       if (!marker) {
         marker = L.marker(position, {
-          icon: aircraftIcon(sighting.flight.heading, sighting.flight.aircraft_kind),
+          icon: aircraftIcon(sighting.flight.heading, sighting.flight.aircraft_type),
         })
           .bindTooltip(label, { direction: "right", offset: [12, 0] })
           .addTo(map.current!);
         markers.current.set(sighting.id, marker);
       } else {
         marker.setLatLng(position);
-        marker.setIcon(aircraftIcon(sighting.flight.heading, sighting.flight.aircraft_kind));
+        marker.setIcon(aircraftIcon(sighting.flight.heading, sighting.flight.aircraft_type));
         marker.setTooltipContent(label);
       }
     });

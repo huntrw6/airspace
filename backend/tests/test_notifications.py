@@ -20,6 +20,7 @@ from airspace.models import (
 from airspace.notifications import (
     PushDispatcher,
     in_quiet_hours,
+    is_helicopter,
     notification_payload,
 )
 from airspace.subscriptions import decrypt_subscription, encrypt_subscription
@@ -193,10 +194,8 @@ def test_helicopter_notification_uses_helicopter_symbol():
     Base.metadata.create_all(engine)
     with Session(engine) as db:
         _, sighting = seeded_delivery(db, settings())
-        sighting.snapshot.update(
-            aircraft_type="Bell 407",
-            aircraft_type_code="B407",
-            aircraft_kind="helicopter",
-        )
+        sighting.snapshot["aircraft_type"] = "Airbus Helicopters H145"
         payload = notification_payload(sighting, "https://planes.example.com")
         assert payload["body"].startswith("📡 In Your AirSpace 🚁\n")
+    assert is_helicopter("R44")
+    assert not is_helicopter("B738")
