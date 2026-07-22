@@ -10,3 +10,4 @@ data
 .env
 custom_components
 example*.jpg
+.dockerignore
