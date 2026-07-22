@@ -115,3 +115,23 @@ async def test_two_profiles_share_region_and_replay_is_deduplicated(monkeypatch)
     with factory() as db:
         assert db.scalar(select(func.count()).select_from(Sighting)) == 2
         assert db.scalar(select(func.count()).select_from(NotificationDelivery)) == 2
+
+
+@pytest.mark.asyncio
+async def test_worker_retries_after_unexpected_cycle_failure(monkeypatch):
+    worker = PollingWorker(FakeProvider(), Settings(provider_enabled=False))
+    attempts = 0
+
+    async def failing_poll() -> None:
+        nonlocal attempts
+        attempts += 1
+        raise RuntimeError("unexpected")
+
+    async def stop_after_interval(_: float) -> None:
+        worker.stop()
+
+    monkeypatch.setattr(worker, "poll_once", failing_poll)
+    monkeypatch.setattr(worker_module.asyncio, "sleep", stop_after_interval)
+    await worker.run()
+    assert attempts == 1
+    assert not worker.running

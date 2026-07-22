@@ -32,7 +32,12 @@ class PollingWorker:
         try:
             while self.running:
                 started = asyncio.get_running_loop().time()
-                await self.poll_once()
+                try:
+                    await self.poll_once()
+                except asyncio.CancelledError:
+                    raise
+                except Exception:
+                    LOGGER.exception("Unexpected polling cycle failure; retrying next interval")
                 elapsed = asyncio.get_running_loop().time() - started
                 await asyncio.sleep(max(1, self.settings.poll_interval_seconds - elapsed))
         finally:
