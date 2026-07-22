@@ -11,16 +11,22 @@ from .polling import LocationPoint, deduplicate_flights, group_regions
 from .providers import FlightProvider, FlightRadar24Provider, NormalizedFlight, ProviderError
 from .tracking import MAP_BUFFER_KM, TrackingService
 from .notifications import PushDispatcher
+from .aircraft_photos import AircraftPhotoService
 
 LOGGER = logging.getLogger(__name__)
 
 
 class PollingWorker:
-    def __init__(self, provider: FlightProvider, settings: Settings) -> None:
+    def __init__(
+        self,
+        provider: FlightProvider,
+        settings: Settings,
+        aircraft_photos: AircraftPhotoService | None = None,
+    ) -> None:
         self.provider = provider
         self.settings = settings
         self.tracker = TrackingService(settings.stale_after_seconds)
-        self.dispatcher = PushDispatcher(settings)
+        self.dispatcher = PushDispatcher(settings, aircraft_photos)
         self.running = False
         self.last_cycle_finished_at: datetime | None = None
         self.active_region_count = 0
@@ -132,7 +138,9 @@ class PollingWorker:
         self.last_cycle_finished_at = datetime.now(timezone.utc)
 
 
-def build_worker(settings: Settings) -> tuple[PollingWorker, FlightRadar24Provider]:
+def build_worker(
+    settings: Settings, aircraft_photos: AircraftPhotoService | None = None
+) -> tuple[PollingWorker, FlightRadar24Provider]:
     provider = FlightRadar24Provider(
         settings.provider_base_url,
         settings.provider_details_url,
@@ -140,4 +148,4 @@ def build_worker(settings: Settings) -> tuple[PollingWorker, FlightRadar24Provid
         settings.provider_detail_ttl_seconds,
         settings.provider_detail_requests_per_cycle,
     )
-    return PollingWorker(provider, settings), provider
+    return PollingWorker(provider, settings, aircraft_photos), provider

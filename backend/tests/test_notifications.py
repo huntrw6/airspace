@@ -169,3 +169,16 @@ def test_notification_payload_uses_friendly_multiline_format():
             "📡 In Your AirSpace ✈️\nHonolulu ➤ Phoenix\n"
             "Airbus A330 at 39,000 feet"
         )
+
+
+def test_notification_payload_includes_aircraft_image_when_available():
+    engine = create_engine("sqlite://", poolclass=StaticPool)
+    Base.metadata.create_all(engine)
+    with Session(engine) as db:
+        _, sighting = seeded_delivery(db, settings())
+        payload = notification_payload(
+            sighting,
+            "https://planes.example.com",
+            "https://t.plnspttrs.net/photo.jpg",
+        )
+        assert payload["image"] == "https://t.plnspttrs.net/photo.jpg"

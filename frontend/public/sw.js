@@ -2,6 +2,7 @@ self.addEventListener('push', event => {
   const data = event.data?.json() || {};
   const options = {
     ...(data.body ? {body: data.body} : {}),
+    ...(data.image ? {image: data.image} : {}),
     tag: data.tag || 'airspace-flight',
     icon: '/icons/icon-192.png',
     data: {url: data.url || '/'}

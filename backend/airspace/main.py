@@ -65,7 +65,7 @@ async def lifespan(_: FastAPI):
     aircraft_photos = AircraftPhotoService(settings)
     provider = None
     if settings.provider_enabled:
-        polling_worker, provider = build_worker(settings)
+        polling_worker, provider = build_worker(settings, aircraft_photos)
         polling_task = asyncio.create_task(polling_worker.run(), name="airspace-regional-poller")
     retention_worker = RetentionWorker(settings)
     retention_task = asyncio.create_task(retention_worker.run(), name="airspace-retention")
@@ -435,7 +435,7 @@ async def test_push_notification(
             )
         )
     db.commit()
-    delivered = await PushDispatcher(settings).deliver_pending()
+    delivered = await PushDispatcher(settings, aircraft_photos).deliver_pending()
     return {"queued": len(devices), "delivered": delivered}
 
 

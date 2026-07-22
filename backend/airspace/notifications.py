@@ -3,10 +3,12 @@ import json
 from datetime import datetime, time, timezone, tzinfo
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+import httpx
 from pywebpush import WebPushException, webpush  # type: ignore[import-untyped]
 from sqlalchemy import select
 
 from .config import Settings
+from .aircraft_photos import AircraftPhotoService
 from .database import SessionLocal, utcnow
 from .models import NotificationDelivery, PushSubscription, Sighting
 from .subscriptions import decrypt_subscription
@@ -30,7 +32,9 @@ def in_quiet_hours(quiet_hours: dict | None, timezone_name: str, now: datetime) 
     return start <= local < end if start < end else local >= start or local < end
 
 
-def notification_payload(sighting: Sighting, public_url: str) -> dict:
+def notification_payload(
+    sighting: Sighting, public_url: str, image_url: str | None = None
+) -> dict:
     flight = sighting.snapshot
     callsign = flight.get("callsign") or "An aircraft"
     airline = flight.get("airline")
@@ -40,7 +44,7 @@ def notification_payload(sighting: Sighting, public_url: str) -> dict:
     altitude = flight.get("altitude_ft")
     flight_name = " ".join(value for value in (airline, callsign) if value)
     altitude_text = f" at {altitude:,.0f} feet" if isinstance(altitude, (int, float)) else ""
-    return {
+    payload = {
         "title": flight_name,
         "body": (
             "📡 In Your AirSpace ✈️\n"
@@ -50,11 +54,32 @@ def notification_payload(sighting: Sighting, public_url: str) -> dict:
         "tag": f"airspace-{sighting.id}",
         "url": f"{public_url.rstrip('/')}/?sighting={sighting.id}",
     }
+    if image_url:
+        payload["image"] = image_url
+    return payload
 
 
 class PushDispatcher:
-    def __init__(self, settings: Settings) -> None:
+    def __init__(
+        self, settings: Settings, aircraft_photos: AircraftPhotoService | None = None
+    ) -> None:
         self.settings = settings
+        self.aircraft_photos = aircraft_photos
+
+    async def _notification_image(self, sighting: Sighting) -> str | None:
+        registration = sighting.snapshot.get("registration")
+        if (
+            not self.settings.aircraft_photos_enabled
+            or self.aircraft_photos is None
+            or not isinstance(registration, str)
+            or not registration.strip()
+        ):
+            return None
+        try:
+            photo = await self.aircraft_photos.lookup(registration)
+        except (httpx.HTTPError, ValueError):
+            return None
+        return photo.thumbnail_url if photo else None
 
     async def deliver_pending(self) -> int:
         if not self.settings.vapid_private_key:
@@ -77,7 +102,10 @@ class PushDispatcher:
                     continue
                 try:
                     subscription = decrypt_subscription(device.subscription_json, self.settings)
-                    payload = notification_payload(sighting, self.settings.public_url)
+                    image_url = await self._notification_image(sighting)
+                    payload = notification_payload(
+                        sighting, self.settings.public_url, image_url
+                    )
                     await asyncio.to_thread(
                         webpush,
                         subscription_info=subscription,
