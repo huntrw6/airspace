@@ -73,6 +73,9 @@ export function formatApiError(payload: unknown, status: number): string {
   }
   return `Request failed (${status})`;
 }
+export function browserPlatform(userAgent: string): string {
+  return userAgent.slice(0, 120);
+}
 export const api = {
   profile: () => request<Profile>("/api/profile"),
   createProfile: (timezone: string) =>
@@ -113,7 +116,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify({
         ...subscription.toJSON(),
-        platform: navigator.userAgent,
+        platform: browserPlatform(navigator.userAgent),
       }),
     }),
   testPush: () =>

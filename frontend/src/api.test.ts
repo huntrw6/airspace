@@ -1,9 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { api, formatApiError } from "./api";
+import { api, browserPlatform, formatApiError } from "./api";
 
 afterEach(() => vi.restoreAllMocks());
 
 describe("profile API", () => {
+  it("bounds long Safari user-agent metadata to the persisted limit", () => {
+    expect(browserPlatform("Safari/" + "x".repeat(200))).toHaveLength(120);
+  });
   it("formats structured validation errors for people", () => {
     expect(
       formatApiError(
