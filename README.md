@@ -12,7 +12,7 @@ airspace.
 - Multi-architecture Docker images for AMD64 and ARM64
 
 
-> AirSpace uses unofficial FlightRadar24 endpoints. They may occasionally change, throttle, or
+> AirSpace uses FlightRadar24 endpoints that may occasionally change, throttle, or
 > become unavailable.
 
 ## Portainer stack
