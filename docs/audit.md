@@ -1,4 +1,4 @@
-# Airspace legacy audit
+# AirSpace legacy audit
 
 ## Scope and provenance
 

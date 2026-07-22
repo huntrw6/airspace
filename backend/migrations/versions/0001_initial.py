@@ -1,4 +1,4 @@
-"""Initial standalone Airspace schema.
+"""Initial standalone AirSpace schema.
 
 Revision ID: 0001
 Revises: None

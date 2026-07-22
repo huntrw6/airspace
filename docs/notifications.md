@@ -12,4 +12,4 @@ The tracker persists a uniquely constrained delivery intent before side effects.
 uses environment-provided VAPID keys, bounds retries, disables HTTP 404/410 subscriptions, records
 delivery status, respects location quiet hours and cooldowns, and never creates intents from stale
 observations. A user-facing test button exercises the same persisted delivery path. Payloads include
-flight facts and an Airspace deep link but never coordinates, endpoints, or encryption keys.
+flight facts and an AirSpace deep link but never coordinates, endpoints, or encryption keys.

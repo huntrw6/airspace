@@ -28,7 +28,7 @@ def current_profile(
     settings: Settings = Depends(get_settings),
 ) -> Profile:
     if token is None:
-        raise HTTPException(status_code=401, detail="This browser has no Airspace profile.")
+        raise HTTPException(status_code=401, detail="This browser has no AirSpace profile.")
     profile = db.scalar(
         select(Profile).where(
             Profile.session_hash == session_hash(token, settings), Profile.deleted_at.is_(None)
@@ -36,7 +36,7 @@ def current_profile(
     )
     if profile is None:
         raise HTTPException(
-            status_code=401, detail="The Airspace browser session is no longer valid."
+            status_code=401, detail="The AirSpace browser session is no longer valid."
         )
     profile.last_active_at = utcnow()
     db.commit()

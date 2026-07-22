@@ -1,6 +1,6 @@
 # Architecture and implementation plan
 
-Airspace is a single deployable web application with a FastAPI API, a React/TypeScript PWA, and
+AirSpace is a single deployable web application with a FastAPI API, a React/TypeScript PWA, and
 SQLite by default. SQLAlchemy models avoid SQLite-specific business logic so PostgreSQL remains a
 practical future option. All timestamps are aware UTC values at storage/API boundaries.
 
@@ -40,5 +40,5 @@ revision files and are applied during application startup before background work
 ## Migration
 
 There is no automatic import of Home Assistant state because HA entity attributes are neither a
-stable database nor an authentication boundary. Administrators deploy Airspace beside HA, users
+stable database nor an authentication boundary. Administrators deploy AirSpace beside HA, users
 recreate locations through onboarding, verify notifications, and then remove the legacy integration.

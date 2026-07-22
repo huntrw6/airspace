@@ -83,7 +83,7 @@ async def lifespan(_: FastAPI):
             await provider.close()
 
 
-app = FastAPI(title="Airspace API", version=__version__, lifespan=lifespan)
+app = FastAPI(title="AirSpace API", version=__version__, lifespan=lifespan)
 
 
 @app.middleware("http")
@@ -397,7 +397,7 @@ async def test_push_notification(
         state="historic",
         minimum_distance_km=0,
         snapshot={
-            "callsign": "Airspace test",
+            "callsign": "AirSpace test",
             "aircraft_type": "Notifications are working",
         },
         trail=[],

@@ -25,7 +25,7 @@ def encrypt_subscription(value: dict, settings: Settings) -> dict:
 
 
 def decrypt_subscription(value: dict, settings: Settings) -> dict:
-    # Plain objects are supported only to migrate records written by Airspace 0.1.0.
+    # Plain objects are supported only to migrate records written by AirSpace 0.1.0.
     if "ciphertext" not in value:
         return value
     try:

@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     trusted_proxy_hops: int = Field(0, ge=0, le=5)
     geocoding_enabled: bool = True
     geocoding_base_url: str = "https://nominatim.openstreetmap.org"
-    geocoding_user_agent: str = "Airspace/0.1 (self-hosted flight tracker)"
+    geocoding_user_agent: str = "AirSpace/0.1 (self-hosted flight tracker)"
     geocoding_timeout_seconds: float = Field(8, ge=2, le=30)
     geocoding_cache_seconds: int = Field(86400, ge=60, le=604800)
     vapid_public_key: str | None = None

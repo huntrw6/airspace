@@ -56,7 +56,7 @@ export function AddressSearch({
         </ul>
       )}
       {message && <p role="status">{message}</p>}
-      <p className="fine">Search text is sent to the configured geocoding service; saved coordinates stay in Airspace.</p>
+      <p className="fine">Search text is sent to the configured geocoding service; saved coordinates stay in AirSpace.</p>
     </div>
   );
 }

@@ -17,7 +17,7 @@ export function projectedPosition(
   ) return [latitude, longitude];
   const observed = Date.parse(observed_at);
   if (!Number.isFinite(observed)) return [latitude, longitude];
-  const elapsedSeconds = Math.min(60, Math.max(0, (nowMilliseconds - observed) / 1000));
+  const elapsedSeconds = Math.min(300, Math.max(0, (nowMilliseconds - observed) / 1000));
   const angularDistance = (ground_speed_knots * 0.000514444 * elapsedSeconds) / EARTH_RADIUS_KM;
   const bearing = (heading * Math.PI) / 180;
   const lat1 = (latitude * Math.PI) / 180;
@@ -33,11 +33,34 @@ export function projectedPosition(
   return [(lat2 * 180) / Math.PI, ((((lon2 * 180) / Math.PI) + 540) % 360) - 180];
 }
 
-function planeIcon(heading?: number): L.DivIcon {
-  const rotation = Number.isFinite(heading) ? Number(heading) - 45 : -45;
+const HELICOPTER_CODES = new Set([
+  "R22", "R44", "R66", "B06", "B212", "B412", "B427", "B429", "EC20", "EC25",
+  "EC30", "EC35", "EC45", "EC55", "H125", "H130", "H135", "H145", "H160", "H175",
+  "H225", "AS32", "AS50", "AS55", "AS65", "S61", "S64", "S65", "S70", "S76", "S92",
+  "A109", "A119", "A139", "A149", "A169", "A189", "MI2", "MI6", "MI8", "MI24", "MI26",
+  "KA27", "KA29", "KA31", "KA32", "UH1", "H60", "CH47", "AH64", "V22",
+]);
+
+export function isHelicopter(aircraftType?: string): boolean {
+  if (!aircraftType) return false;
+  const normalized = aircraftType.trim().toUpperCase();
+  return (
+    HELICOPTER_CODES.has(normalized) ||
+    /HELICOPTER|ROTORCRAFT|ROTOR CRAFT/.test(normalized)
+  );
+}
+
+export function markerRotation(heading: number | undefined, helicopter: boolean): number {
+  const baseline = helicopter ? 270 : 90;
+  return Number.isFinite(heading) ? Number(heading) - baseline : -baseline;
+}
+
+function aircraftIcon(heading?: number, aircraftType?: string): L.DivIcon {
+  const helicopter = isHelicopter(aircraftType);
+  const rotation = markerRotation(heading, helicopter);
   return L.divIcon({
     className: "aircraft-marker",
-    html: `<span style="transform:rotate(${rotation}deg)">✈</span>`,
+    html: `<span style="transform:rotate(${rotation}deg)">${helicopter ? "🚁" : "✈"}</span>`,
     iconSize: [34, 34],
     iconAnchor: [17, 17],
   });
@@ -66,14 +89,16 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
       if (!position) return;
       let marker = markers.current.get(sighting.id);
       if (!marker) {
-        marker = L.marker(position, { icon: planeIcon(sighting.flight.heading) })
+        marker = L.marker(position, {
+          icon: aircraftIcon(sighting.flight.heading, sighting.flight.aircraft_type),
+        })
           .bindTooltip(sighting.flight.callsign || "Unidentified aircraft")
           .addTo(map.current!);
         markers.current.set(sighting.id, marker);
         newBounds.push(position);
       } else {
         marker.setLatLng(position);
-        marker.setIcon(planeIcon(sighting.flight.heading));
+        marker.setIcon(aircraftIcon(sighting.flight.heading, sighting.flight.aircraft_type));
       }
     });
     if (!fittedAircraft.current && newBounds.length) {

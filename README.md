@@ -1,6 +1,6 @@
-# Airspace
+# AirSpace
 
-Airspace is a private-by-design web app that tells ordinary people which aircraft are near a
+AirSpace is a private-by-design web app that tells ordinary people which aircraft are near a
 chosen home or viewing spot. It runs independently of Home Assistant and supports multiple
 anonymous browser profiles, each with private locations and preferences.
 
@@ -19,11 +19,11 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-Open `http://SERVER:7373`. For public use, put Airspace behind an HTTPS reverse proxy and set
+Open `http://SERVER:7373`. For public use, put AirSpace behind an HTTPS reverse proxy and set
 `AIRSPACE_PUBLIC_URL` to its URL. Secure browser notifications and installable-PWA behavior require
 HTTPS (localhost is the development exception).
 
-Airspace automatically generates its browser-push VAPID key pair on first startup and stores it in
+AirSpace automatically generates its browser-push VAPID key pair on first startup and stores it in
 the persistent data volume. Set the VAPID subject to a monitored administrator address. To use a
 manually managed pair instead, set both key variables before startup:
 
@@ -38,7 +38,7 @@ overridden before exposing `/admin` publicly.
 
 ## Anonymous profiles
 
-There is no registration screen, username, email, recovery code, or cross-device linking. Airspace
+There is no registration screen, username, email, recovery code, or cross-device linking. AirSpace
 sets a long random credential in a Secure, HttpOnly, SameSite cookie and stores only its keyed hash.
 Database IDs, coordinates, device IDs, and push endpoints are never credentials. Clearing browser
 data or deleting the installed PWA can permanently remove access; create a new profile on another
@@ -47,8 +47,8 @@ device. Users can delete locations or their whole profile.
 ## Browsers and iPhone installation
 
 Current Chrome, Edge, Firefox, and Safari releases can use the live dashboard. Web Push support
-depends on the browser and operating system. On iPhone and iPad, open Airspace in Safari, tap Share,
-choose **Add to Home Screen**, open the installed Airspace icon, and then enable notifications. The
+depends on the browser and operating system. On iPhone and iPad, open AirSpace in Safari, tap Share,
+choose **Add to Home Screen**, open the installed AirSpace icon, and then enable notifications. The
 onboarding flow detects this case and shows installation guidance before requesting permission.
 Private/incognito browsing is unsuitable because the anonymous profile and push subscription may be
 discarded when the session closes.
@@ -86,7 +86,7 @@ docker compose up -d --build
 ```
 
 The example configuration sets `AIRSPACE_TRUSTED_PROXY_HOPS=1` for the single reverse-proxy
-topology described here. Set it to `0` if Airspace is directly exposed, and match the exact proxy
+topology described here. Set it to `0` if AirSpace is directly exposed, and match the exact proxy
 hop count in more complex deployments; otherwise forwarded client addresses are intentionally
 ignored to prevent header spoofing.
 

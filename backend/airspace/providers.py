@@ -186,7 +186,7 @@ class FlightRadar24Provider:
         self._details_url = details_url.rstrip("/")
         self._client = client or httpx.AsyncClient(
             timeout=httpx.Timeout(timeout_seconds),
-            headers={"User-Agent": "Airspace/0.1 (+self-hosted aircraft notifications)"},
+            headers={"User-Agent": "AirSpace/0.1 (+self-hosted aircraft notifications)"},
             follow_redirects=False,
         )
         self._owns_client = client is None

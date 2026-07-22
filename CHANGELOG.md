@@ -2,7 +2,7 @@
 
 ## 0.1.0 - 2026-07-21
 
-- Began the standalone Airspace architecture.
+- Began the standalone AirSpace architecture.
 - Added anonymous profiles, monitored-location CRUD, push-subscription persistence, health and
   protected administrator endpoints.
 - Added typed geographic/lifecycle/provider/polling primitives and tests.

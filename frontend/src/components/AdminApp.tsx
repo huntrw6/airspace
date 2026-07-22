@@ -18,7 +18,7 @@ export function AdminApp() {
   return (
     <main>
       <header>
-        <span className="brand">AIRSPACE ADMIN</span>
+        <span className="brand">AirSpace Admin</span>
       </header>
       <section>
         <h1>Operations</h1>

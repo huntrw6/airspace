@@ -87,7 +87,7 @@ function App() {
   }
   const locate = () => {
     if (!window.isSecureContext) {
-      setError("Current location requires HTTPS. Open Airspace through your secure reverse-proxy address, then try again.");
+      setError("Current location requires HTTPS. Open AirSpace through your secure reverse-proxy address, then try again.");
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -207,12 +207,12 @@ function App() {
         public_key_length: publicKeyLength,
         platform: navigator.userAgent,
       };
-      console.error("Airspace push diagnostic", diagnostic, e);
+      console.error("AirSpace push diagnostic", diagnostic, e);
       let diagnosticId = "not recorded";
       try {
         diagnosticId = (await api.reportPushDiagnostic(diagnostic)).diagnostic_id;
       } catch (reportError) {
-        console.error("Airspace could not report push diagnostic", reportError);
+        console.error("AirSpace could not report push diagnostic", reportError);
       }
       setError(`Push failed at ${stage}: ${errorName}: ${errorMessage} (diagnostic ${diagnosticId})`);
     }
@@ -220,14 +220,14 @@ function App() {
   if (loading)
     return (
       <main>
-        <p>Opening Airspace…</p>
+        <p>Opening AirSpace…</p>
       </main>
     );
   if (!profile || profile.locations.length === 0) {
     return (
       <main>
         <header>
-          <span className="brand">AIRSPACE</span>
+          <span className="brand">AirSpace</span>
           <span className="status">
             ●{" "}
             {status === "healthy"
@@ -243,7 +243,7 @@ function App() {
             <em>over your home.</em>
           </h1>
           <p>
-            Choose a viewing spot and Airspace will tell you when an interesting
+            Choose a viewing spot and AirSpace will tell you when an interesting
             aircraft is nearby—no aviation knowledge needed.
           </p>
           {step === 0 && (
@@ -321,7 +321,7 @@ function App() {
               {needsIosInstallation() && (
                 <p>
                   On iPhone or iPad, first tap Safari’s Share button, choose{" "}
-                  <strong>Add to Home Screen</strong>, then open Airspace from
+                  <strong>Add to Home Screen</strong>, then open AirSpace from
                   its new Home Screen icon to enable alerts.
                 </p>
               )}
@@ -355,7 +355,7 @@ function App() {
   return (
     <main>
       <header>
-        <span className="brand">AIRSPACE</span>
+        <span className="brand">AirSpace</span>
         <span className="status">
           ● {status === "healthy" ? "Tracking live" : "Data " + status}
         </span>
