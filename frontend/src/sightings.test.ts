@@ -15,12 +15,12 @@ function sighting(state: string): Sighting {
 }
 
 describe("live sighting states", () => {
-  it.each(["detected", "approaching", "in_view", "overhead", "departing"])(
+  it.each(["detected", "approaching", "in_view", "overhead", "departing", "held"])(
     "keeps %s aircraft on the live map",
     (state) => expect(isLiveSighting(sighting(state))).toBe(true),
   );
 
-  it.each(["held", "historic", "expired"])(
+  it.each(["historic", "expired"])(
     "keeps %s aircraft off the live map",
     (state) => expect(isLiveSighting(sighting(state))).toBe(false),
   );

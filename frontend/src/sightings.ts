@@ -6,6 +6,7 @@ export const LIVE_SIGHTING_STATES = new Set([
   "in_view",
   "overhead",
   "departing",
+  "held",
 ]);
 
 export function isLiveSighting(sighting: Sighting): boolean {

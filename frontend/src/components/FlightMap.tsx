@@ -3,22 +3,43 @@ import L from "leaflet";
 import type { Location, Sighting } from "../api";
 
 const EARTH_RADIUS_KM = 6371;
+const KNOTS_TO_KM_PER_SECOND = 0.000514444;
+
+export function circleCrossingSeconds(
+  radiusKm: number,
+  groundSpeedKnots: number | undefined,
+): number {
+  if (
+    !Number.isFinite(radiusKm) ||
+    radiusKm <= 0 ||
+    !Number.isFinite(groundSpeedKnots) ||
+    Number(groundSpeedKnots) <= 0
+  )
+    return 0;
+  return (radiusKm * 2) / (Number(groundSpeedKnots) * KNOTS_TO_KM_PER_SECOND);
+}
 
 export function projectedPosition(
   flight: Sighting["flight"],
   nowMilliseconds = Date.now(),
+  maximumProjectionSeconds = 0,
 ): [number, number] | null {
   const { latitude, longitude, heading, ground_speed_knots, observed_at } = flight;
   if (typeof latitude !== "number" || typeof longitude !== "number") return null;
   if (
     typeof heading !== "number" ||
     typeof ground_speed_knots !== "number" ||
-    !observed_at
+    !observed_at ||
+    maximumProjectionSeconds <= 0
   ) return [latitude, longitude];
   const observed = Date.parse(observed_at);
   if (!Number.isFinite(observed)) return [latitude, longitude];
-  const elapsedSeconds = Math.min(300, Math.max(0, (nowMilliseconds - observed) / 1000));
-  const angularDistance = (ground_speed_knots * 0.000514444 * elapsedSeconds) / EARTH_RADIUS_KM;
+  const elapsedSeconds = Math.min(
+    maximumProjectionSeconds,
+    Math.max(0, (nowMilliseconds - observed) / 1000),
+  );
+  const angularDistance =
+    (ground_speed_knots * KNOTS_TO_KM_PER_SECOND * elapsedSeconds) / EARTH_RADIUS_KM;
   const bearing = (heading * Math.PI) / 180;
   const lat1 = (latitude * Math.PI) / 180;
   const lon1 = (longitude * Math.PI) / 180;
@@ -71,7 +92,6 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
   const map = useRef<L.Map | null>(null);
   const markers = useRef(new Map<string, L.Marker>());
   const currentSightings = useRef(sightings);
-  const fittedAircraft = useRef(false);
   currentSightings.current = sightings;
 
   function renderAircraft() {
@@ -83,9 +103,13 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
         markers.current.delete(id);
       }
     });
-    const newBounds: L.LatLngExpression[] = [];
     currentSightings.current.forEach((sighting) => {
-      const position = projectedPosition(sighting.flight);
+      const location = locations.find((item) => item.id === sighting.location_id);
+      const projectionSeconds = circleCrossingSeconds(
+        location?.radius_km ?? 0,
+        sighting.flight.ground_speed_knots,
+      );
+      const position = projectedPosition(sighting.flight, Date.now(), projectionSeconds);
       if (!position) return;
       let marker = markers.current.get(sighting.id);
       if (!marker) {
@@ -95,17 +119,11 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
           .bindTooltip(sighting.flight.callsign || "Unidentified aircraft")
           .addTo(map.current!);
         markers.current.set(sighting.id, marker);
-        newBounds.push(position);
       } else {
         marker.setLatLng(position);
         marker.setIcon(aircraftIcon(sighting.flight.heading, sighting.flight.aircraft_type));
       }
     });
-    if (!fittedAircraft.current && newBounds.length) {
-      const locationBounds = locations.map((item) => [item.latitude, item.longitude] as L.LatLngTuple);
-      map.current.fitBounds(L.latLngBounds([...locationBounds, ...newBounds]), { padding: [30, 30] });
-      fittedAircraft.current = true;
-    }
   }
 
   useEffect(() => {
@@ -116,14 +134,17 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
     }).addTo(map.current);
+    const viewingBounds = L.latLngBounds([]);
     locations.forEach((location) => {
-      L.circle([location.latitude, location.longitude], {
+      const circle = L.circle([location.latitude, location.longitude], {
         radius: location.radius_km * 1000,
         color: "#5ed2e8",
         fillColor: "#168ba4",
         fillOpacity: 0.1,
       }).bindTooltip(location.label).addTo(map.current!);
+      viewingBounds.extend(circle.getBounds());
     });
+    map.current.fitBounds(viewingBounds, { padding: [30, 30] });
     renderAircraft();
     const timer = window.setInterval(renderAircraft, 1000);
     return () => {
@@ -131,7 +152,6 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
       markers.current.clear();
       map.current?.remove();
       map.current = null;
-      fittedAircraft.current = false;
     };
   }, [locations]);
 

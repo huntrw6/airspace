@@ -62,7 +62,19 @@ function App() {
   }, [profile]);
   useEffect(() => {
     if (!profile) return;
+    let active = true;
+    const refreshSightings = () =>
+      api
+        .sightings()
+        .then((next) => {
+          if (active) setSightings(next);
+        })
+        .catch(() => {});
     const events = new EventSource("/api/events");
+    events.onopen = () =>
+      setError((current) =>
+        current === "Live updates are reconnecting…" ? "" : current,
+      );
     events.addEventListener("sightings", (event) => {
       try {
         setSightings(JSON.parse((event as MessageEvent).data));
@@ -70,8 +82,16 @@ function App() {
         // Ignore a malformed event; the next server event contains a full snapshot.
       }
     });
-    events.onerror = () => setError("Live updates are reconnecting…");
-    return () => events.close();
+    events.onerror = () => {
+      setError("Live updates are reconnecting…");
+      void refreshSightings();
+    };
+    const fallbackTimer = window.setInterval(refreshSightings, 15_000);
+    return () => {
+      active = false;
+      window.clearInterval(fallbackTimer);
+      events.close();
+    };
   }, [profile]);
   useEffect(() => {
     if (step === 5)

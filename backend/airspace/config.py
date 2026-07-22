@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     session_pepper: SecretStr = SecretStr("development-only-change-me")
     max_locations_per_profile: int = Field(5, ge=1, le=25)
     max_subscriptions_per_profile: int = Field(5, ge=1, le=25)
-    poll_interval_seconds: int = Field(30, ge=15, le=900)
+    poll_interval_seconds: int = Field(20, ge=15, le=900)
     provider_enabled: bool = False
     provider_base_url: str = "https://data-cloud.flightradar24.com"
     provider_details_url: str = "https://data-live.flightradar24.com"
