@@ -167,8 +167,8 @@ function App() {
     if (!position) return;
     try {
       await api.addLocation({
-        label: "your circle",
         ...position,
+        label: "your circle",
         radius_km: radius,
         detection_mode: "all",
         facing_direction: 0,
@@ -185,8 +185,8 @@ function App() {
     if (!position) return;
     try {
       await api.addLocation({
-        label: "Another viewing spot",
         ...position,
+        label: "Another viewing spot",
         radius_km: radius,
         detection_mode: "all",
         facing_direction: 0,
@@ -301,7 +301,10 @@ function App() {
               <button onClick={locate}>Use my current location</button>
               <AddressSearch
                 onChoose={(result) => {
-                  setPosition(result);
+                  setPosition({
+                    latitude: result.latitude,
+                    longitude: result.longitude,
+                  });
                 }}
               />
               <MapPicker
@@ -407,7 +410,14 @@ function App() {
             <div className="location-settings">
               <h2>Choose another viewing spot</h2>
               <button onClick={locate}>Use my current location</button>
-              <AddressSearch onChoose={setPosition} />
+              <AddressSearch
+                onChoose={(result) =>
+                  setPosition({
+                    latitude: result.latitude,
+                    longitude: result.longitude,
+                  })
+                }
+              />
               <MapPicker
                 position={position}
                 radiusKm={radius}
