@@ -144,6 +144,33 @@ async def test_http_410_permanently_disables_subscription(monkeypatch):
         assert delivery.response_status == 410 and delivery.error_category == "permanent"
 
 
+@pytest.mark.asyncio
+async def test_unexpected_push_failure_is_recorded_for_retry(monkeypatch):
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    Base.metadata.create_all(engine)
+    factory = sessionmaker(bind=engine, expire_on_commit=False)
+    monkeypatch.setattr(notification_module, "SessionLocal", factory)
+    configured = settings()
+    with factory() as db:
+        _, sighting = seeded_delivery(db, configured)
+        sighting_id = sighting.id
+
+    def unexpected(**kwargs):
+        raise RuntimeError("push transport stopped")
+
+    monkeypatch.setattr(notification_module, "webpush", unexpected)
+    assert await PushDispatcher(configured).deliver_pending() == 0
+    with factory() as db:
+        delivery = db.scalar(
+            select(NotificationDelivery).where(NotificationDelivery.sighting_id == sighting_id)
+        )
+        assert delivery is not None
+        assert delivery.error_category == "transient"
+        assert delivery.retry_count == 1
+
+
 def test_notification_payload_contains_no_coordinates_or_endpoint():
     engine = create_engine("sqlite://", poolclass=StaticPool)
     Base.metadata.create_all(engine)

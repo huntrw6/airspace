@@ -218,11 +218,13 @@ class TrackingService:
             cooldown_start = now - timedelta(seconds=location.notification_cooldown_seconds)
             recent = db.scalar(
                 select(NotificationDelivery.id)
+                .join(Sighting, Sighting.id == NotificationDelivery.sighting_id)
                 .where(
                     NotificationDelivery.device_id == device.id,
                     NotificationDelivery.location_id == location.id,
                     NotificationDelivery.notification_type == notification_type,
                     NotificationDelivery.attempted_at >= cooldown_start,
+                    Sighting.flight_id == sighting.flight_id,
                 )
                 .limit(1)
             )

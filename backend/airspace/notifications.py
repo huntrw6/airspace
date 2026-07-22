@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 from datetime import datetime, time, timezone, tzinfo
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -13,6 +14,8 @@ from .aircraft_photos import AircraftPhotoService
 from .database import SessionLocal, utcnow
 from .models import NotificationDelivery, PushSubscription, Sighting
 from .subscriptions import decrypt_subscription
+
+LOGGER = logging.getLogger(__name__)
 
 def in_quiet_hours(quiet_hours: dict | None, timezone_name: str, now: datetime) -> bool:
     if not quiet_hours or not quiet_hours.get("enabled", True):
@@ -122,12 +125,25 @@ class PushDispatcher:
                     delivery.error_category = None
                     device.last_success_at = utcnow()
                     delivered += 1
-                except ValueError:
+                    LOGGER.info(
+                        "Push delivery succeeded delivery=%s device=%s sighting=%s",
+                        delivery.id,
+                        device.id,
+                        sighting.id,
+                    )
+                except ValueError as error:
                     delivery.error_category = "subscription_decryption"
                     delivery.retry_count = self.settings.push_max_retries
                     device.enabled = False
                     device.permanent_failure = True
                     device.last_failure_at = utcnow()
+                    LOGGER.warning(
+                        "Push delivery disabled unreadable subscription delivery=%s device=%s "
+                        "error=%s",
+                        delivery.id,
+                        device.id,
+                        type(error).__name__,
+                    )
                 except WebPushException as error:
                     status = error.response.status_code if error.response is not None else None
                     delivery.response_status = status
@@ -137,6 +153,28 @@ class PushDispatcher:
                     if status in {404, 410}:
                         device.enabled = False
                         device.permanent_failure = True
+                    LOGGER.warning(
+                        "Push delivery failed delivery=%s device=%s status=%s category=%s "
+                        "retry=%s/%s",
+                        delivery.id,
+                        device.id,
+                        status,
+                        delivery.error_category,
+                        delivery.retry_count,
+                        self.settings.push_max_retries,
+                    )
+                except Exception as error:
+                    delivery.retry_count += 1
+                    delivery.error_category = "transient"
+                    device.last_failure_at = utcnow()
+                    LOGGER.exception(
+                        "Unexpected push delivery failure delivery=%s device=%s retry=%s/%s: %s",
+                        delivery.id,
+                        device.id,
+                        delivery.retry_count,
+                        self.settings.push_max_retries,
+                        type(error).__name__,
+                    )
                 delivery.attempted_at = utcnow()
                 db.commit()
         return delivered

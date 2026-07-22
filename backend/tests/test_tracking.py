@@ -229,7 +229,7 @@ def test_quiet_hours_suppress_notification_intent():
     assert db.scalar(select(func.count()).select_from(NotificationDelivery)) == 0
 
 
-def test_location_cooldown_suppresses_new_event_delivery():
+def test_location_cooldown_suppresses_repeat_delivery_for_same_aircraft():
     db = database()
     location = seed(db)
     now = datetime.now(timezone.utc)
@@ -242,3 +242,20 @@ def test_location_cooldown_suppresses_new_event_delivery():
     service.process_cycle(db, {location.id: [replay]}, {location.id}, replay.observed_at)
     assert db.scalar(select(func.count()).select_from(Sighting)) == 2
     assert db.scalar(select(func.count()).select_from(NotificationDelivery)) == 1
+
+
+def test_location_cooldown_does_not_suppress_a_different_aircraft():
+    db = database()
+    location = seed(db)
+    now = datetime.now(timezone.utc)
+    service = TrackingService(120)
+    service.process_cycle(db, {location.id: [flight(now)]}, {location.id}, now)
+    other = replace(
+        flight(now + timedelta(minutes=5)),
+        flight_id="different-aircraft",
+        provider_flight_id="provider-2",
+        callsign="AS456",
+    )
+    service.process_cycle(db, {location.id: [other]}, {location.id}, other.observed_at)
+    assert db.scalar(select(func.count()).select_from(Sighting)) == 2
+    assert db.scalar(select(func.count()).select_from(NotificationDelivery)) == 2

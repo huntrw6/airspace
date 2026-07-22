@@ -568,6 +568,22 @@ def admin_summary(db: Session = Depends(get_db), settings: Settings = Depends(ge
         "active_subscriptions": db.scalar(
             select(func.count()).select_from(PushSubscription).where(PushSubscription.enabled)
         ),
+        "disabled_subscriptions": db.scalar(
+            select(func.count()).select_from(PushSubscription).where(~PushSubscription.enabled)
+        ),
+        "successful_deliveries": db.scalar(
+            select(func.count())
+            .select_from(NotificationDelivery)
+            .where(NotificationDelivery.success)
+        ),
+        "pending_deliveries": db.scalar(
+            select(func.count())
+            .select_from(NotificationDelivery)
+            .where(
+                ~NotificationDelivery.success,
+                NotificationDelivery.retry_count < settings.push_max_retries,
+            )
+        ),
         "failed_deliveries": db.scalar(
             select(func.count())
             .select_from(NotificationDelivery)
