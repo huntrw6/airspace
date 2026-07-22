@@ -126,6 +126,3 @@ More detail is available in [the project documentation](docs/architecture.md), i
 [deployment](docs/docker-deployment.md), [privacy](docs/privacy.md),
 [security](docs/security.md), and [notifications](docs/notifications.md).
 
-## License and attribution
-
-AirSpace is MIT licensed. See [LICENSE](LICENSE) for upstream attribution and license details.
