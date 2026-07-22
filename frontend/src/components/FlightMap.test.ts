@@ -63,6 +63,8 @@ describe("live aircraft projection", () => {
     expect(isHelicopter("Airbus Helicopters H145")).toBe(true);
     expect(isHelicopter("B738")).toBe(false);
     expect(markerRotation(270, true)).toBe(0);
+    expect(markerRotation(45, true)).toBe(0);
+    expect(markerRotation(undefined, true)).toBe(0);
   });
 
   it("stops projection at the buffered map boundary from the observed position", () => {

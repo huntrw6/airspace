@@ -384,7 +384,8 @@ function App() {
       <header>
         <span className="brand dashboard-brand">YOUR AIRSPACE</span>
         <span className={`status status-${connectionState}`} role="status">
-          ● {connectionState === "disconnected" ? "DISCONNECTED" : connectionState === "live" ? "LIVE" : "CONNECTING"}
+          <span className="status-dot" aria-hidden="true">●</span>{" "}
+          {connectionState === "disconnected" ? "DISCONNECTED" : connectionState === "live" ? "LIVE" : "CONNECTING"}
         </span>
       </header>
       <section className="dashboard-section">

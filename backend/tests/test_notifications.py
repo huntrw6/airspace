@@ -17,7 +17,12 @@ from airspace.models import (
     PushSubscription,
     Sighting,
 )
-from airspace.notifications import PushDispatcher, in_quiet_hours, notification_payload
+from airspace.notifications import (
+    PushDispatcher,
+    in_quiet_hours,
+    is_helicopter,
+    notification_payload,
+)
 from airspace.subscriptions import decrypt_subscription, encrypt_subscription
 from airspace.generate_vapid import encoded_key_pair
 from py_vapid import Vapid
@@ -182,3 +187,15 @@ def test_notification_payload_includes_aircraft_image_when_available():
             "https://t.plnspttrs.net/photo.jpg",
         )
         assert payload["image"] == "https://t.plnspttrs.net/photo.jpg"
+
+
+def test_helicopter_notification_uses_helicopter_symbol():
+    engine = create_engine("sqlite://", poolclass=StaticPool)
+    Base.metadata.create_all(engine)
+    with Session(engine) as db:
+        _, sighting = seeded_delivery(db, settings())
+        sighting.snapshot["aircraft_type"] = "Airbus Helicopters H145"
+        payload = notification_payload(sighting, "https://planes.example.com")
+        assert payload["body"].startswith("📡 In Your AirSpace 🚁\n")
+    assert is_helicopter("R44")
+    assert not is_helicopter("B738")

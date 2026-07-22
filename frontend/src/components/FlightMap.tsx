@@ -119,8 +119,8 @@ export function isHelicopter(aircraftType?: string): boolean {
 }
 
 export function markerRotation(heading: number | undefined, helicopter: boolean): number {
-  const baseline = helicopter ? 270 : 90;
-  return Number.isFinite(heading) ? Number(heading) - baseline : -baseline;
+  if (helicopter) return 0;
+  return Number.isFinite(heading) ? Number(heading) - 90 : -90;
 }
 
 export function flightMarkerLabel(flight: Sighting["flight"]): string {

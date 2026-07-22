@@ -46,6 +46,10 @@ header {
 .status-live {
   color: #ff5c57;
 }
+.status-live .status-dot {
+  display: inline-block;
+  animation: live-position-update 1s ease-in-out infinite;
+}
 .status-checking,
 .status-disconnected {
   color: #f2c14e;
@@ -368,8 +372,20 @@ summary {
     transform: rotate(360deg);
   }
 }
+@keyframes live-position-update {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.18;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .radar-sweep-vector {
+    animation: none;
+  }
+  .status-live .status-dot {
     animation: none;
   }
 }
