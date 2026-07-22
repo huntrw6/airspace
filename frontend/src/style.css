@@ -188,7 +188,11 @@ input:focus-visible {
   overflow: hidden;
 }
 .dashboard-map {
-  height: 420px;
+  width: min(100%, 620px);
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  margin: 18px auto;
 }
 .coordinate-fields,
 .time-fields {
@@ -354,8 +358,10 @@ summary {
   h1 {
     font-size: 3.2rem;
   }
-  .map,
-  .dashboard-map {
+  .map {
     height: 280px;
+  }
+  .dashboard-map {
+    height: auto;
   }
 }

@@ -202,7 +202,16 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
   useEffect(() => {
     if (!element.current || locations.length === 0) return;
     const first = locations[0];
-    map.current = L.map(element.current).setView([first.latitude, first.longitude], 11);
+    map.current = L.map(element.current, {
+      zoomControl: false,
+      zoomSnap: 0,
+      dragging: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
+      touchZoom: false,
+    }).setView([first.latitude, first.longitude], 11);
     L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -222,9 +231,9 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
         pane: "radarPane",
         interactive: false,
       }).addTo(map.current!);
-      viewingBounds.extend(bufferedViewingBounds(location));
+      viewingBounds.extend(circle.getBounds());
     });
-    map.current.fitBounds(viewingBounds, { padding: [30, 30] });
+    map.current.fitBounds(viewingBounds, { padding: [0, 0], animate: false });
     renderAircraft();
     const timer = window.setInterval(renderAircraft, 1000);
     return () => {
