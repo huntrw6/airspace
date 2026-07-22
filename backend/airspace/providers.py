@@ -229,11 +229,8 @@ class FlightRadar24Provider:
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._details_url = details_url.rstrip("/")
-        self._client = client or httpx.AsyncClient(
-            timeout=httpx.Timeout(timeout_seconds),
-            headers={"User-Agent": "AirSpace/0.1 (+self-hosted aircraft notifications)"},
-            follow_redirects=False,
-        )
+        self._timeout_seconds = timeout_seconds
+        self._client = client or self._new_client()
         self._owns_client = client is None
         self._detail_ttl = timedelta(seconds=detail_ttl_seconds)
         self._details: dict[str, tuple[datetime, NormalizedFlight]] = {}
@@ -245,6 +242,13 @@ class FlightRadar24Provider:
         self.cycle_airborne_aircraft = 0
         self.cycle_empty_responses = 0
 
+    def _new_client(self) -> httpx.AsyncClient:
+        return httpx.AsyncClient(
+            timeout=httpx.Timeout(self._timeout_seconds),
+            headers={"User-Agent": "AirSpace/0.1 (+self-hosted aircraft notifications)"},
+            follow_redirects=False,
+        )
+
     def begin_poll_cycle(self) -> None:
         self._detail_budget = self._detail_budget_default
         self.cycle_feed_requests = 0
@@ -255,6 +259,16 @@ class FlightRadar24Provider:
     async def close(self) -> None:
         if self._owns_client:
             await self._client.aclose()
+
+    async def reset_connection(self) -> bool:
+        """Replace the owned HTTP session after repeated anomalous empty feeds."""
+        if not self._owns_client:
+            return False
+        previous = self._client
+        self._client = self._new_client()
+        self._blocked_until.clear()
+        await previous.aclose()
+        return True
 
     def supports_feature(self, feature: str) -> bool:
         return feature in {"regional_positions", "flight_details"}

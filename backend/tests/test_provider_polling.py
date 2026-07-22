@@ -173,6 +173,38 @@ async def test_ground_targets_are_requested_but_filtered_locally():
 
 
 @pytest.mark.asyncio
+async def test_injected_provider_client_is_not_replaced():
+    client = httpx.AsyncClient(transport=httpx.MockTransport(lambda _: httpx.Response(200)))
+    provider = FlightRadar24Provider(
+        "https://feed.invalid", "https://details.invalid", client=client
+    )
+    assert not await provider.reset_connection()
+    assert provider._client is client
+    await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_owned_provider_connection_can_be_recycled(monkeypatch):
+    old_client = httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda _: httpx.Response(200))
+    )
+    new_client = httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda _: httpx.Response(200))
+    )
+    provider = FlightRadar24Provider(
+        "https://feed.invalid", "https://details.invalid", client=old_client
+    )
+    provider._owns_client = True
+    monkeypatch.setattr(provider, "_new_client", lambda: new_client)
+
+    assert await provider.reset_connection()
+    assert old_client.is_closed
+    assert provider._client is new_client
+    await provider.close()
+    assert new_client.is_closed
+
+
+@pytest.mark.asyncio
 async def test_metadata_only_feed_retries_with_minimal_request():
     requests: list[httpx.Request] = []
 

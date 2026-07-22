@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     provider_timeout_seconds: float = Field(10, ge=2, le=30)
     provider_detail_ttl_seconds: int = Field(900, ge=60, le=86400)
     provider_detail_requests_per_cycle: int = Field(3, ge=0, le=25)
+    provider_empty_cycles_before_reset: int = Field(3, ge=2, le=20)
     max_regions_per_cycle: int = Field(40, ge=1, le=500)
     stale_after_seconds: int = Field(120, ge=30, le=3600)
     history_retention_days: int = Field(60, ge=1, le=365)

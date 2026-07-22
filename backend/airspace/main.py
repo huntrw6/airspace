@@ -238,6 +238,15 @@ def api_status(db: Session = Depends(get_db), settings: Settings = Depends(get_s
         "last_empty_feed_responses": (
             polling_worker.last_empty_response_count if polling_worker else 0
         ),
+        "consecutive_all_empty_cycles": (
+            polling_worker.consecutive_all_empty_cycles if polling_worker else 0
+        ),
+        "provider_session_resets": (
+            polling_worker.provider_session_resets if polling_worker else 0
+        ),
+        "last_provider_session_reset": (
+            polling_worker.last_provider_session_reset_at if polling_worker else None
+        ),
     }
 
 

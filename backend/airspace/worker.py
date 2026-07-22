@@ -36,6 +36,9 @@ class PollingWorker:
         self.last_raw_aircraft_count = 0
         self.last_airborne_aircraft_count = 0
         self.last_empty_response_count = 0
+        self.consecutive_all_empty_cycles = 0
+        self.provider_session_resets = 0
+        self.last_provider_session_reset_at: datetime | None = None
         self._region_offset = 0
 
     async def run(self) -> None:
@@ -78,6 +81,7 @@ class PollingWorker:
             )
             flights_by_location: dict[str, list[NormalizedFlight]] = {}
             successful: set[str] = set()
+            successful_region_responses = 0
             errors: list[str] = []
             region_items = sorted(regions.items(), key=lambda item: item[0].key)
             self.active_region_count = min(len(region_items), self.settings.max_regions_per_cycle)
@@ -118,6 +122,7 @@ class PollingWorker:
                             enriched.append(flight)
                     diagnostic.last_flight_count = len(enriched)
                     diagnostic.last_error = None
+                    successful_region_responses += 1
                     successful.update(location_ids)
                     for location_id in location_ids:
                         flights_by_location.setdefault(location_id, []).extend(enriched)
@@ -127,7 +132,41 @@ class PollingWorker:
                     errors.append(message)
                     diagnostic.last_error = message
                     LOGGER.warning("Provider region %s failed: %s", region.key, message)
-            if successful:
+            cycle_raw_aircraft = getattr(self.provider, "cycle_raw_aircraft", 0)
+            cycle_empty_responses = getattr(self.provider, "cycle_empty_responses", 0)
+            all_empty_anomaly = (
+                successful_region_responses > 0
+                and cycle_raw_aircraft == 0
+                and cycle_empty_responses >= successful_region_responses
+            )
+            if all_empty_anomaly:
+                self.consecutive_all_empty_cycles += 1
+                message = (
+                    f"All {successful_region_responses} provider regions returned empty feeds "
+                    "after fallback"
+                )
+                errors.append("AllRegionsEmpty")
+                LOGGER.warning(
+                    "%s (cycle %s/%s); preserving tracked aircraft",
+                    message,
+                    self.consecutive_all_empty_cycles,
+                    self.settings.provider_empty_cycles_before_reset,
+                )
+                if (
+                    self.consecutive_all_empty_cycles
+                    >= self.settings.provider_empty_cycles_before_reset
+                ):
+                    reset_connection = getattr(self.provider, "reset_connection", None)
+                    if reset_connection and await reset_connection():
+                        self.provider_session_resets += 1
+                        self.last_provider_session_reset_at = now
+                        self.consecutive_all_empty_cycles = 0
+                        LOGGER.warning("Reset provider HTTP session after repeated empty feeds")
+                health.consecutive_failures += 1
+                health.status = "degraded"
+                health.last_error = message
+            elif successful:
+                self.consecutive_all_empty_cycles = 0
                 flights_by_location = {
                     location_id: deduplicate_flights(flights)
                     for location_id, flights in flights_by_location.items()
@@ -137,9 +176,11 @@ class PollingWorker:
                 health.consecutive_failures = 0 if not errors else health.consecutive_failures + 1
                 health.status = "degraded" if errors else "healthy"
             else:
+                self.consecutive_all_empty_cycles = 0
                 health.consecutive_failures += 1
                 health.status = "unavailable" if locations else "idle"
-            health.last_error = ", ".join(errors[:3]) or None
+            if not all_empty_anomaly:
+                health.last_error = ", ".join(errors[:3]) or None
             db.commit()
         self.last_feed_request_count = getattr(self.provider, "cycle_feed_requests", 0)
         self.last_raw_aircraft_count = getattr(self.provider, "cycle_raw_aircraft", 0)
