@@ -16,7 +16,7 @@ git clone https://github.com/huntrw6/airspace.git
 cd airspace
 cp .env.example .env
 # Replace the default AIRSPACE_ADMIN_PASSWORD before public deployment.
-docker compose up -d --build
+docker compose up -d
 ```
 
 Open `http://SERVER:7373`. For public use, put AirSpace behind an HTTPS reverse proxy and set
@@ -33,8 +33,12 @@ docker compose run --rm airspace python -m airspace.generate_vapid
 
 The container also generates `/app/data/session-pepper` on first startup and reuses it from the
 persistent volume. Do not delete or replace that file unless invalidating all anonymous sessions is
-intentional. The bundled administrator password is only a deployment placeholder and must be
-overridden before exposing `/admin` publicly.
+intentional. The bundled administrator password is only a deployment placeholder. The container
+refuses to start in production until it is replaced.
+
+Images for `linux/amd64` and `linux/arm64` are published from `main` to
+`ghcr.io/huntrw6/airspace:latest`. Version tags such as `v1.2.3` also publish immutable versioned
+images. Set `AIRSPACE_IMAGE` to a version or digest when a deployment must not track `latest`.
 
 ## Anonymous profiles
 
@@ -77,12 +81,11 @@ docker compose up -d
 
 # Upgrade (back up first)
 git pull --ff-only
-docker compose build --pull
+docker compose pull
 docker compose up -d
 
-# Roll back code, then restore the matching backup if a migration changed data
-git checkout <known-good-tag>
-docker compose up -d --build
+# Roll back the image, then restore the matching backup if a migration changed data
+AIRSPACE_IMAGE=ghcr.io/huntrw6/airspace:<known-good-tag> docker compose up -d
 ```
 
 The example configuration sets `AIRSPACE_TRUSTED_PROXY_HOPS=1` for the single reverse-proxy

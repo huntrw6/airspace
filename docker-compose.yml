@@ -1,7 +1,6 @@
 services:
   airspace:
-    build: .
-    image: airspace:local
+    image: ${AIRSPACE_IMAGE:-ghcr.io/huntrw6/airspace:latest}
     restart: unless-stopped
     environment:
       AIRSPACE_ENVIRONMENT: production
