@@ -4,6 +4,9 @@ The browser service worker accepts Web Push payloads with a title, body, stable 
 deep link. Onboarding requests permission only after a user gesture, registers through PushManager,
 and sends the subscription to the profile-scoped API. Endpoints are indexed only by SHA-256; the
 full subscription is encrypted with a dedicated Fernet key or a key derived from the session pepper.
+The container entrypoint generates a VAPID key pair on first startup, stores it with mode `0600` in
+the persistent `/app/data` volume, and reloads the same pair on subsequent deployments. Operators
+may override it only by supplying both VAPID environment variables.
 
 The tracker persists a uniquely constrained delivery intent before side effects. The dispatcher
 uses environment-provided VAPID keys, bounds retries, disables HTTP 404/410 subscriptions, records

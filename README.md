@@ -23,12 +23,12 @@ Open `http://SERVER:7373`. For public use, put Airspace behind an HTTPS reverse 
 `AIRSPACE_PUBLIC_URL` to its URL. Secure browser notifications and installable-PWA behavior require
 HTTPS (localhost is the development exception).
 
-Generate a VAPID pair once, copy both output lines into `.env`, set the VAPID subject to a monitored
-administrator address, and restart:
+Airspace automatically generates its browser-push VAPID key pair on first startup and stores it in
+the persistent data volume. Set the VAPID subject to a monitored administrator address. To use a
+manually managed pair instead, set both key variables before startup:
 
 ```bash
 docker compose run --rm airspace python -m airspace.generate_vapid
-docker compose up -d
 ```
 
 ## Anonymous profiles

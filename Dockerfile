@@ -18,4 +18,4 @@ RUN mkdir -p /app/data && chown -R airspace:airspace /app
 USER airspace
 EXPOSE 7373
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD ["python","-c","import urllib.request; urllib.request.urlopen('http://127.0.0.1:7373/health/live',timeout=3)"]
-CMD ["uvicorn","airspace.main:app","--host","0.0.0.0","--port","7373"]
+CMD ["python","-m","airspace.entrypoint"]
