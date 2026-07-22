@@ -33,8 +33,8 @@ docker compose run --rm airspace python -m airspace.generate_vapid
 
 The container also generates `/app/data/session-pepper` on first startup and reuses it from the
 persistent volume. Do not delete or replace that file unless invalidating all anonymous sessions is
-intentional. The bundled administrator password is only a deployment placeholder. The container
-refuses to start in production until it is replaced.
+intentional. The bundled administrator password is only a deployment placeholder. It allows the
+stack to start, but should be replaced before exposing `/admin` publicly.
 
 Images for `linux/amd64` and `linux/arm64` are published from `main` to
 `ghcr.io/huntrw6/airspace:latest`. Version tags such as `v1.2.3` also publish immutable versioned

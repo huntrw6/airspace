@@ -3,36 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from airspace.entrypoint import (
-    ensure_session_pepper,
-    ensure_vapid_keys,
-    validate_production_admin_password,
-)
-
-
-def test_rejects_placeholder_admin_password_in_production(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setenv("AIRSPACE_ENVIRONMENT", "production")
-    monkeypatch.setenv("AIRSPACE_ADMIN_PASSWORD", "ReplaceThisWithSecretAdminPassword")
-    with pytest.raises(RuntimeError, match="must be changed"):
-        validate_production_admin_password()
-
-
-def test_accepts_configured_admin_password_in_production(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setenv("AIRSPACE_ENVIRONMENT", "production")
-    monkeypatch.setenv("AIRSPACE_ADMIN_PASSWORD", "a-deployment-specific-secret")
-    validate_production_admin_password()
-
-
-def test_allows_placeholder_admin_password_during_development(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setenv("AIRSPACE_ENVIRONMENT", "development")
-    monkeypatch.delenv("AIRSPACE_ADMIN_PASSWORD", raising=False)
-    validate_production_admin_password()
+from airspace.entrypoint import ensure_session_pepper, ensure_vapid_keys
 
 
 def test_generates_and_reuses_persistent_session_pepper(

@@ -9,19 +9,6 @@ from .generate_vapid import encoded_key_pair
 
 DEFAULT_KEY_FILE = Path("/app/data/vapid-keys.json")
 DEFAULT_PEPPER_FILE = Path("/app/data/session-pepper")
-DEFAULT_ADMIN_PASSWORD = "ReplaceThisWithSecretAdminPassword"
-
-
-def validate_production_admin_password() -> None:
-    environment = os.environ.get("AIRSPACE_ENVIRONMENT", "development").strip().lower()
-    password = os.environ.get("AIRSPACE_ADMIN_PASSWORD", DEFAULT_ADMIN_PASSWORD).strip()
-    if environment == "production" and (
-        not password or secrets.compare_digest(password, DEFAULT_ADMIN_PASSWORD)
-    ):
-        raise RuntimeError(
-            "AIRSPACE_ADMIN_PASSWORD must be changed from its placeholder value "
-            "before starting in production."
-        )
 
 
 def ensure_session_pepper(pepper_file: Path | None = None) -> str:
@@ -76,7 +63,6 @@ def ensure_vapid_keys(key_file: Path | None = None) -> tuple[str, str]:
 
 
 def main() -> None:
-    validate_production_admin_password()
     ensure_session_pepper()
     ensure_vapid_keys()
     os.execvp(
