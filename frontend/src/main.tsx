@@ -85,7 +85,11 @@ function App() {
   async function refreshProfile() {
     setProfile(await api.profile());
   }
-  const locate = () =>
+  const locate = () => {
+    if (!window.isSecureContext) {
+      setError("Current location requires HTTPS. Open Airspace through your secure reverse-proxy address, then try again.");
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       (p) => {
         setPosition({
@@ -99,6 +103,7 @@ function App() {
           "We could not use this device’s location. Enter coordinates or choose a point on the map when available.",
         ),
     );
+  };
   async function begin() {
     try {
       setError("");

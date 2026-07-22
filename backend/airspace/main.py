@@ -5,7 +5,6 @@ import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from urllib.parse import urlsplit
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, Query, Response
 from fastapi.responses import FileResponse, StreamingResponse
@@ -33,6 +32,7 @@ from .worker import PollingWorker, build_worker
 from .retention import RetentionWorker, cleanup_once
 from .geocoding import Geocoder
 from .rate_limit import SlidingWindowLimiter, privacy_key
+from .origin import origin_is_allowed
 
 polling_worker: PollingWorker | None = None
 polling_task: asyncio.Task | None = None
@@ -111,8 +111,13 @@ async def security_headers(request, call_next):
             )
     if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
         origin = request.headers.get("Origin")
-        expected = get_settings().public_url
-        if origin and urlsplit(origin).netloc != urlsplit(expected).netloc:
+        if not origin_is_allowed(
+            origin,
+            settings.public_url,
+            request.headers.get("Host"),
+            request.headers.get("X-Forwarded-Host"),
+            trust_forwarded=bool(settings.trusted_proxy_hops),
+        ):
             return Response(
                 content='{"detail":"Cross-origin request rejected."}',
                 status_code=403,

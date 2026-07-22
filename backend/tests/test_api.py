@@ -42,3 +42,29 @@ def test_cross_origin_mutation_is_rejected():
             headers={"Origin": "https://attacker.invalid"},
         )
         assert response.status_code == 403
+
+
+def test_onboarding_directional_location_through_request_host():
+    with TestClient(app, base_url="https://planes.example.test") as client:
+        created = client.post(
+            "/api/profiles",
+            json={"timezone": "America/Los_Angeles", "units": "imperial"},
+            headers={"Origin": "https://planes.example.test"},
+        )
+        assert created.status_code == 201
+        location = client.post(
+            "/api/locations",
+            json={
+                "label": "My viewing spot",
+                "latitude": 34.0,
+                "longitude": -118.0,
+                "radius_km": 8,
+                "detection_mode": "directional",
+                "facing_direction": 270,
+                "fov_width": 120,
+                "overhead_threshold_km": 1,
+                "notification_cooldown_seconds": 1800,
+            },
+            headers={"Origin": "https://planes.example.test"},
+        )
+        assert location.status_code == 201, location.text

@@ -1,9 +1,17 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { api } from "./api";
+import { api, formatApiError } from "./api";
 
 afterEach(() => vi.restoreAllMocks());
 
 describe("profile API", () => {
+  it("formats structured validation errors for people", () => {
+    expect(
+      formatApiError(
+        { detail: [{ loc: ["body", "radius_km"], msg: "Input should be greater than 0" }] },
+        422,
+      ),
+    ).toBe("radius_km: Input should be greater than 0");
+  });
   it("keeps valid zero coordinates", async () => {
     vi.stubGlobal(
       "fetch",

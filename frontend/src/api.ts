@@ -52,12 +52,26 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     credentials: "same-origin",
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
-  if (!response.ok)
-    throw new Error(
-      (await response.json().catch(() => ({ detail: "Request failed" })))
-        .detail,
-    );
+  if (!response.ok) {
+    const payload: unknown = await response.json().catch(() => null);
+    throw new Error(formatApiError(payload, response.status));
+  }
   return response.status === 204 ? (undefined as T) : response.json();
+}
+export function formatApiError(payload: unknown, status: number): string {
+  if (payload && typeof payload === "object" && "detail" in payload) {
+    const detail = (payload as { detail: unknown }).detail;
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail)) {
+      return detail.map((item) => {
+        if (!item || typeof item !== "object") return String(item);
+        const issue = item as { msg?: string; loc?: unknown[] };
+        const field = issue.loc?.at(-1);
+        return `${field ? `${String(field)}: ` : ""}${issue.msg || "Invalid value"}`;
+      }).join("; ");
+    }
+  }
+  return `Request failed (${status})`;
 }
 export const api = {
   profile: () => request<Profile>("/api/profile"),
