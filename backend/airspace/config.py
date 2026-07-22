@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     public_url: str = "http://localhost:7373"
     cookie_secure: bool = False
     session_days: int = Field(365, ge=1, le=730)
-    admin_password: SecretStr = SecretStr("change-me")
+    admin_password: SecretStr = SecretStr("ReplaceThisWithSecretAdminPassword")
     session_pepper: SecretStr = SecretStr("development-only-change-me")
     max_locations_per_profile: int = Field(5, ge=1, le=25)
     max_subscriptions_per_profile: int = Field(5, ge=1, le=25)
@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     geocoding_cache_seconds: int = Field(86400, ge=60, le=604800)
     vapid_public_key: str | None = None
     vapid_private_key: SecretStr | None = None
-    vapid_subject: str = "mailto:admin@example.invalid"
+    vapid_subject: str = "mailto:hunter.wegner6@gmail.com"
     push_encryption_key: SecretStr | None = None
     push_max_retries: int = Field(3, ge=1, le=10)
 

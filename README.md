@@ -15,7 +15,7 @@ anonymous browser profiles, each with private locations and preferences.
 git clone https://github.com/huntrw6/airspace.git
 cd airspace
 cp .env.example .env
-# Replace AIRSPACE_ADMIN_PASSWORD and AIRSPACE_SESSION_PEPPER in .env.
+# Replace the default AIRSPACE_ADMIN_PASSWORD before public deployment.
 docker compose up -d --build
 ```
 
@@ -30,6 +30,11 @@ manually managed pair instead, set both key variables before startup:
 ```bash
 docker compose run --rm airspace python -m airspace.generate_vapid
 ```
+
+The container also generates `/app/data/session-pepper` on first startup and reuses it from the
+persistent volume. Do not delete or replace that file unless invalidating all anonymous sessions is
+intentional. The bundled administrator password is only a deployment placeholder and must be
+overridden before exposing `/admin` publicly.
 
 ## Anonymous profiles
 
