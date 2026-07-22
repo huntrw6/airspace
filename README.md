@@ -37,8 +37,9 @@ intentional. The bundled administrator password is only a deployment placeholder
 stack to start, but should be replaced before exposing `/admin` publicly.
 
 Images for `linux/amd64` and `linux/arm64` are published from `main` to
-`ghcr.io/huntrw6/airspace:latest`. Version tags such as `v1.2.3` also publish immutable versioned
-images. Set `AIRSPACE_IMAGE` to a version or digest when a deployment must not track `latest`.
+`ghcr.io/huntrw6/airspace:latest` and, when the Docker Hub repository secrets are configured,
+`huntrw6/airspace:latest`. Version tags such as `v1.2.3` also publish immutable versioned images.
+Set `AIRSPACE_IMAGE` to a version or digest when a deployment must not track `latest`.
 
 ## Anonymous profiles
 
