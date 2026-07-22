@@ -140,15 +140,20 @@ function aircraftIcon(heading?: number, aircraftType?: string): L.DivIcon {
   });
 }
 
-function radarSweepIcon(radiusPixels: number): L.DivIcon {
-  const radius = Math.max(1, Math.round(radiusPixels));
-  const diameter = radius * 2;
-  return L.divIcon({
-    className: "radar-sweep-marker",
-    html: '<span class="radar-sweep" aria-hidden="true"></span>',
-    iconSize: [diameter, diameter],
-    iconAnchor: [radius, radius],
-  });
+function radarSweepElement(): SVGSVGElement {
+  const element = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  element.setAttribute("viewBox", "0 0 100 100");
+  element.setAttribute("preserveAspectRatio", "none");
+  element.setAttribute("aria-hidden", "true");
+  element.classList.add("radar-sweep-overlay");
+  element.innerHTML = `
+    <g class="radar-sweep-vector">
+      <path class="radar-trail radar-trail-far" d="M50 50 L6.7 25 A50 50 0 0 1 50 0 Z" />
+      <path class="radar-trail radar-trail-mid" d="M50 50 L17.9 11.7 A50 50 0 0 1 50 0 Z" />
+      <path class="radar-trail radar-trail-near" d="M50 50 L32.9 3 A50 50 0 0 1 50 0 Z" />
+      <line class="radar-beam" x1="50" y1="50" x2="50" y2="0" />
+    </g>`;
+  return element;
 }
 
 export function FlightMap({ locations, sightings }: { locations: Location[]; sightings: Sighting[] }) {
@@ -203,7 +208,6 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
     radarPane.style.zIndex = "450";
     radarPane.style.pointerEvents = "none";
     const viewingBounds = L.latLngBounds([]);
-    const radarLayers: Array<{ circle: L.Circle; marker: L.Marker }> = [];
     locations.forEach((location) => {
       const circle = L.circle([location.latitude, location.longitude], {
         radius: location.radius_km * 1000,
@@ -211,35 +215,17 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
         fillColor: "#168ba4",
         fillOpacity: 0.1,
       }).addTo(map.current!);
-      const marker = L.marker(circle.getLatLng(), {
+      L.svgOverlay(radarSweepElement(), circle.getBounds(), {
         pane: "radarPane",
         interactive: false,
-        keyboard: false,
-        icon: radarSweepIcon(1),
       }).addTo(map.current!);
-      radarLayers.push({ circle, marker });
       viewingBounds.extend(bufferedViewingBounds(location));
     });
     map.current.fitBounds(viewingBounds, { padding: [30, 30] });
-    const resizeRadarSweeps = () => {
-      if (!map.current) return;
-      radarLayers.forEach(({ circle, marker }) => {
-        const center = circle.getLatLng();
-        const centerPoint = map.current!.latLngToLayerPoint(center);
-        const edgePoint = map.current!.latLngToLayerPoint([
-          center.lat,
-          circle.getBounds().getEast(),
-        ]);
-        marker.setIcon(radarSweepIcon(Math.abs(edgePoint.x - centerPoint.x)));
-      });
-    };
-    resizeRadarSweeps();
-    map.current.on("zoomend", resizeRadarSweeps);
     renderAircraft();
     const timer = window.setInterval(renderAircraft, 1000);
     return () => {
       window.clearInterval(timer);
-      map.current?.off("zoomend", resizeRadarSweeps);
       markers.current.clear();
       map.current?.remove();
       map.current = null;

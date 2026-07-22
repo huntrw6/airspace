@@ -290,39 +290,31 @@ summary {
   font-family: Arial, Helvetica, sans-serif;
   font-variant-emoji: text;
 }
-.radar-sweep-marker {
-  background: transparent;
-  border: 0;
+.radar-sweep-overlay {
+  overflow: visible;
   pointer-events: none;
 }
-.radar-sweep {
-  display: block;
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 300deg,
-    transparent 0deg,
-    rgb(94 210 232 / 0.03) 20deg,
-    rgb(94 210 232 / 0.12) 42deg,
-    rgb(94 210 232 / 0.34) 59deg,
-    transparent 60deg
-  );
-  filter: drop-shadow(0 0 4px rgb(94 210 232 / 0.28));
+.radar-sweep-vector {
+  transform-box: view-box;
+  transform-origin: center;
   animation: radar-scan 5s linear infinite;
 }
-.radar-sweep::after {
-  position: absolute;
-  top: 0;
-  left: calc(50% - 1px);
-  width: 2px;
-  height: 50%;
-  content: "";
-  background: linear-gradient(to bottom, #b8f6ff99, #74e5f7);
-  box-shadow: 0 0 7px #5ed2e8;
-  transform-origin: center bottom;
+.radar-trail {
+  fill: #5ed2e8;
+}
+.radar-trail-far {
+  opacity: 0.04;
+}
+.radar-trail-mid {
+  opacity: 0.09;
+}
+.radar-trail-near {
+  opacity: 0.17;
+}
+.radar-beam {
+  stroke: #8cecff;
+  stroke-width: 0.65;
+  filter: drop-shadow(0 0 1.5px #5ed2e8);
 }
 @keyframes radar-scan {
   to {
@@ -330,7 +322,7 @@ summary {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .radar-sweep {
+  .radar-sweep-vector {
     animation: none;
   }
 }
