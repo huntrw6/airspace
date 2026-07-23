@@ -20,6 +20,18 @@ export function compassHeading(heading?: number): string {
   return `${Math.round(heading)}° ${names[Math.round(heading / 45) % 8]}`;
 }
 
+export function sightingDate(value: string): Date {
+  const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(value);
+  return new Date(hasTimezone ? value : `${value}Z`);
+}
+
+export function formatSightingTime(
+  value: string,
+  timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone,
+): string {
+  return sightingDate(value).toLocaleString(undefined, { timeZone, timeZoneName: "short" });
+}
+
 export function flightradar24Url(sighting: Sighting): string | null {
   const callsign = sighting.flight.callsign?.trim().toLowerCase();
   const providerId = sighting.provider_flight_id?.trim().toLowerCase();
@@ -61,9 +73,9 @@ export function SightingCard({ sighting, expanded = false }: { sighting: Sightin
     <p>{sighting.minimum_distance_km.toFixed(1)} km closest · {flight.altitude_ft?.toLocaleString() || "Altitude unavailable"} ft</p>
     <p>{compassHeading(flight.heading)} · {sighting.state.replace("_", " ")}</p>
     <small>
-      First detected {new Date(sighting.first_detected_at).toLocaleString()}
+      First detected {formatSightingTime(sighting.first_detected_at)}
       <br />
-      Last seen {new Date(sighting.last_seen_at).toLocaleString()}
+      Last seen {formatSightingTime(sighting.last_seen_at)}
     </small>
     {trackerUrl && <p><a href={trackerUrl} target="_blank" rel="noreferrer">Follow on Flightradar24 ↗</a></p>}
   </article>;

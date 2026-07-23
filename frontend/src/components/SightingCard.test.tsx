@@ -2,12 +2,30 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api } from "../api";
-import { compassHeading, flightradar24Url, SightingCard } from "./SightingCard";
+import {
+  compassHeading,
+  flightradar24Url,
+  formatSightingTime,
+  sightingDate,
+  SightingCard,
+} from "./SightingCard";
 
 describe("sighting details", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
+  });
+
+  it("treats legacy offset-less detection times as UTC", () => {
+    expect(sightingDate("2026-07-22T22:48:32").toISOString()).toBe(
+      "2026-07-22T22:48:32.000Z",
+    );
+    expect(sightingDate("2026-07-22T15:48:32-07:00").toISOString()).toBe(
+      "2026-07-22T22:48:32.000Z",
+    );
+    expect(formatSightingTime("2026-07-22T22:48:32Z", "America/Los_Angeles")).toMatch(
+      /3:48:32 PM PDT/,
+    );
   });
 
   it("shows an attributed aircraft photo when a registration is available", async () => {

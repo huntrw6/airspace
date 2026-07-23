@@ -91,6 +91,11 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="AirSpace API", version=__version__, lifespan=lifespan)
 
 
+def utc_iso(value: datetime) -> str:
+    aware = value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
+    return aware.isoformat().replace("+00:00", "Z")
+
+
 @app.middleware("http")
 async def security_headers(request, call_next):
     settings = get_settings()
@@ -505,8 +510,8 @@ def sightings(profile: Profile = Depends(current_profile), db: Session = Depends
             "location_id": r.location_id,
             "provider_flight_id": r.provider_flight_id,
             "state": r.state,
-            "first_detected_at": r.first_detected_at,
-            "last_seen_at": r.last_seen_at,
+            "first_detected_at": utc_iso(r.first_detected_at),
+            "last_seen_at": utc_iso(r.last_seen_at),
             "minimum_distance_km": r.minimum_distance_km,
             "flight": r.snapshot,
         }
@@ -536,8 +541,8 @@ def events(profile: Profile = Depends(current_profile)):
                             "location_id": row.location_id,
                             "provider_flight_id": row.provider_flight_id,
                             "state": row.state,
-                            "first_detected_at": row.first_detected_at.isoformat(),
-                            "last_seen_at": row.last_seen_at.isoformat(),
+                            "first_detected_at": utc_iso(row.first_detected_at),
+                            "last_seen_at": utc_iso(row.last_seen_at),
                             "minimum_distance_km": row.minimum_distance_km,
                             "flight": row.snapshot,
                         }

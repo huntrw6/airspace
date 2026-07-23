@@ -1,6 +1,7 @@
 import hashlib
 import logging
 import os
+from datetime import datetime, timedelta, timezone
 
 os.environ.update(
     AIRSPACE_DATABASE_URL="sqlite://",
@@ -11,7 +12,7 @@ os.environ.update(
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from airspace.database import SessionLocal
-from airspace.main import app
+from airspace.main import app, utc_iso
 from airspace.models import PushSubscription
 
 
@@ -21,6 +22,14 @@ def test_migrations_keep_worker_logger_enabled():
     with TestClient(app):
         pass
     assert worker_logger.disabled is False
+
+
+def test_api_timestamps_are_serialized_as_explicit_utc():
+    assert utc_iso(datetime(2026, 7, 22, 22, 48, 32)) == "2026-07-22T22:48:32Z"
+    pacific = timezone(-timedelta(hours=7))
+    assert utc_iso(datetime(2026, 7, 22, 15, 48, 32, tzinfo=pacific)) == (
+        "2026-07-22T22:48:32Z"
+    )
 
 
 def test_profile_is_private_and_persists_in_cookie():
