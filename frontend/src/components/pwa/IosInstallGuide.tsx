@@ -1,7 +1,11 @@
 export function IosInstallGuide() {
   return (
-    <div className="ios-install-guide" aria-label="Four steps to add AirSpace to your Home Screen">
+    <div className="ios-install-guide" aria-label="Five steps to add AirSpace to your Home Screen">
       <ol>
+        <li>
+          <span className="install-step-visual menu-symbol" aria-hidden="true">···</span>
+          <span><strong>Tap the ··· menu</strong><small>Open Safari’s page menu.</small></span>
+        </li>
         <li>
           <span className="install-step-visual share-symbol" aria-hidden="true">
             <svg viewBox="0 0 24 24" role="img">

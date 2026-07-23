@@ -36,3 +36,10 @@ export function shouldShowInstallPrompt(options: {
     options.explicit;
   return useful && (options.explicit || (options.eligible && !options.dismissed));
 }
+
+export function requiresInstalledPwaForLocation(
+  platform: "ios" | "android" | "desktop" | "unknown",
+  installed: boolean,
+): boolean {
+  return platform === "ios" && !installed;
+}

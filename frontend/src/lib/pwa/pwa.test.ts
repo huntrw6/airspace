@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   installedDisplayModeQueries,
   isRunningAsInstalledPwa,
+  requiresInstalledPwaForLocation,
   shouldShowInstallPrompt,
 } from "./install-state";
 import { detectPlatform, isLikelyEmbeddedBrowser } from "./platform";
@@ -60,6 +61,12 @@ describe("installed mode", () => {
     Object.defineProperty(window, "matchMedia", { configurable: true, value: undefined });
     expect(isRunningAsInstalledPwa()).toBe(false);
     expect(installedDisplayModeQueries()).toContain("(display-mode: standalone)");
+  });
+
+  it("requires the installed app for Apple location requests only", () => {
+    expect(requiresInstalledPwaForLocation("ios", false)).toBe(true);
+    expect(requiresInstalledPwaForLocation("ios", true)).toBe(false);
+    expect(requiresInstalledPwaForLocation("android", false)).toBe(false);
   });
 });
 

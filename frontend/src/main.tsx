@@ -9,6 +9,7 @@ import { AddressSearch } from "./components/AddressSearch";
 import { SightingCard } from "./components/SightingCard";
 import { AppHeader, type ConnectionState } from "./components/AppHeader";
 import { PwaInstallProvider, usePwaInstallUi } from "./components/pwa/PwaInstallProvider";
+import { requiresInstalledPwaForLocation } from "./lib/pwa/install-state";
 import { isLiveSighting, orderLivePanelsByDistance } from "./sightings";
 import "./style.css";
 const presets = {
@@ -131,6 +132,13 @@ function App() {
     setProfile(await api.profile());
   }
   const locate = () => {
+    if (requiresInstalledPwaForLocation(platform, isInstalled)) {
+      showInstallPrompt();
+      setError(
+        "For reliable location access on iPhone and iPad, install AirSpace and reopen it from your Home Screen.",
+      );
+      return;
+    }
     if (!window.isSecureContext) {
       setError("Current location requires HTTPS. Open AirSpace through your secure reverse-proxy address, then try again.");
       return;

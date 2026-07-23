@@ -13,7 +13,7 @@
 
 | Environment | Check | Status |
 | --- | --- | --- |
-| iPhone Safari tab | Original Share → Add to Home Screen guide; no fake native button | Physical device required |
+| iPhone Safari tab | Original menu → Share → Add to Home Screen guide; no fake native button | Physical device required |
 | iPhone Home Screen app | Install prompt hidden; notification action available | Physical device required |
 | iPad Safari | iPad and desktop-style iPad detection | Physical device required |
 | Android Chrome | Real captured native prompt; notification permission remains separate | Physical device required |
@@ -27,12 +27,13 @@
 
 1. Open the deployed HTTPS AirSpace URL in Safari, not from the Home Screen.
 2. Complete location setup or open **Privacy and profile settings** and choose **Install AirSpace**.
-3. Confirm the guide shows Share, Add to Home Screen, Add, and the AirSpace icon.
+3. Confirm the guide shows the ··· menu, Share, Add to Home Screen, Add, and the AirSpace icon.
 4. Dismiss it and reload; confirm it stays hidden for the cooldown period.
 5. Open Settings and choose **Install AirSpace** again; confirm this bypasses the cooldown.
 6. Follow the guide, add AirSpace, and launch it from the new Home Screen icon.
-7. Confirm the installation prompt is absent and choose **Enable Plane Notifications**.
-8. Grant permission from that user gesture and send a test notification from Settings.
+7. Confirm **Use my current location** can request location from the installed app.
+8. Confirm the installation prompt is absent and choose **Enable Plane Notifications**.
+9. Grant permission from that user gesture and send a test notification from Settings.
 
 ## Android verification
 

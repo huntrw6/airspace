@@ -29,6 +29,7 @@ describe("PWA installation prompt", () => {
       value: "Mozilla/5.0 (iPhone) AppleWebKit/605.1 Version/18.0 Mobile Safari/604.1",
     });
     render(<PwaInstallPrompt {...base} platform="ios" />);
+    expect(screen.getByText("Tap the ··· menu")).toBeTruthy();
     expect(screen.getByText("Tap Share")).toBeTruthy();
     expect(screen.getByText("Add to Home Screen")).toBeTruthy();
     expect(screen.getByText("Open AirSpace")).toBeTruthy();
@@ -72,6 +73,6 @@ describe("PWA installation prompt", () => {
       value: "Mozilla/5.0 (iPad) AppleWebKit/605.1 Version/18.0 Mobile Safari/604.1",
     });
     render(<PwaInstallPrompt {...base} platform="ios" />);
-    expect(screen.getByLabelText(/Four steps/).querySelectorAll("li")).toHaveLength(4);
+    expect(screen.getByLabelText(/Five steps/).querySelectorAll("li")).toHaveLength(5);
   });
 });
