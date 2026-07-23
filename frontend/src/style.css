@@ -330,6 +330,151 @@ summary {
 .history {
   margin-top: 1rem;
 }
+.install-setting-status {
+  margin-bottom: 0;
+  font-size: 0.95rem;
+}
+.pwa-install-sheet {
+  position: fixed;
+  z-index: 2000;
+  right: max(22px, env(safe-area-inset-right));
+  bottom: max(22px, env(safe-area-inset-bottom));
+  width: min(440px, calc(100vw - 44px));
+  max-height: min(760px, calc(100vh - 44px));
+  overflow: auto;
+  border: 1px solid #5ed2e866;
+  border-radius: 24px;
+  padding: 24px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  background: #0d2b40f7;
+  color: #f4f9fc;
+  box-shadow: 0 24px 80px #000b;
+  backdrop-filter: blur(18px);
+}
+.pwa-install-sheet h2 {
+  margin: 0.1rem 0 0;
+  font: 1.65rem/1.1 Georgia, serif;
+}
+.pwa-install-sheet p {
+  margin: 0.75rem 0;
+  color: #cee1eb;
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+.pwa-install-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-right: 34px;
+}
+.pwa-install-heading > img {
+  width: 62px;
+  height: 62px;
+  border-radius: 15px;
+  box-shadow: 0 8px 24px #0007;
+}
+.pwa-install-heading .eyebrow {
+  margin: 0;
+  color: #8cecff;
+  font-size: 0.68rem;
+}
+.pwa-install-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 42px;
+  height: 42px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: #dcebf2;
+  font-size: 1.75rem;
+  line-height: 1;
+}
+.pwa-install-note {
+  border-left: 3px solid #f1bb72;
+  padding: 10px 12px;
+  background: #ffffff0b;
+  border-radius: 4px 12px 12px 4px;
+}
+.pwa-install-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.pwa-install-actions button {
+  margin: 0;
+}
+.pwa-install-actions .quiet {
+  color: #e7f3f8;
+}
+.pwa-install-result {
+  font-size: 0.88rem !important;
+}
+.ios-install-guide ol {
+  display: grid;
+  gap: 8px;
+  margin: 15px 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: install-step;
+}
+.ios-install-guide li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #ffffff20;
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #061a29aa;
+  counter-increment: install-step;
+  animation: install-step-highlight 12s ease-in-out infinite;
+}
+.ios-install-guide li:nth-child(2) { animation-delay: 3s; }
+.ios-install-guide li:nth-child(3) { animation-delay: 6s; }
+.ios-install-guide li:nth-child(4) { animation-delay: 9s; }
+.ios-install-guide li::after {
+  position: absolute;
+  top: 7px;
+  right: 9px;
+  color: #8cecff;
+  content: counter(install-step);
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+.ios-install-guide strong,
+.ios-install-guide small {
+  display: block;
+}
+.ios-install-guide small {
+  margin-top: 3px;
+  color: #b9ced9;
+  line-height: 1.3;
+}
+.install-step-visual {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid #8cecff77;
+  border-radius: 11px;
+  background: #eaf8fc;
+  color: #0b3851;
+  object-fit: cover;
+  font-weight: 850;
+}
+.share-symbol svg {
+  width: 27px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+.confirm-symbol { font-size: 0.75rem; }
 .aircraft-marker {
   background: transparent;
   border: 0;
@@ -395,6 +540,20 @@ summary {
     opacity: 1;
   }
 }
+@keyframes install-step-highlight {
+  0%, 22% {
+    border-color: #8cecff;
+    background: #123f59;
+    box-shadow: 0 0 0 2px #5ed2e833;
+    transform: translateY(-1px);
+  }
+  30%, 100% {
+    border-color: #ffffff20;
+    background: #061a29aa;
+    box-shadow: none;
+    transform: none;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .radar-sweep-vector {
     animation: none;
@@ -402,8 +561,24 @@ summary {
   .status-live .status-dot {
     animation: none;
   }
+  .ios-install-guide li {
+    animation: none;
+  }
 }
 @media (max-width: 550px) {
+  .pwa-install-sheet {
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: min(82vh, 760px);
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 24px 24px 0 0;
+    padding: 22px max(20px, env(safe-area-inset-left));
+    padding-bottom: max(22px, env(safe-area-inset-bottom));
+  }
   .aircraft-photo {
     float: none;
     width: 100%;

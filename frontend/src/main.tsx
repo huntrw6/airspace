@@ -8,6 +8,7 @@ import { AdminApp } from "./components/AdminApp";
 import { AddressSearch } from "./components/AddressSearch";
 import { SightingCard } from "./components/SightingCard";
 import { AppHeader, type ConnectionState } from "./components/AppHeader";
+import { PwaInstallProvider, usePwaInstallUi } from "./components/pwa/PwaInstallProvider";
 import { isLiveSighting, orderLivePanelsByDistance } from "./sightings";
 import "./style.css";
 const presets = {
@@ -18,18 +19,9 @@ const presets = {
 };
 const HEALTH_CHECK_INTERVAL_MS = 15_000;
 const DISCONNECTED_AFTER_FAILURES = 3;
-function needsIosInstallation(): boolean {
-  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const legacyStandalone = Boolean(
-    (navigator as Navigator & { standalone?: boolean }).standalone,
-  );
-  return (
-    ios &&
-    !legacyStandalone &&
-    !window.matchMedia("(display-mode: standalone)").matches
-  );
-}
 function App() {
+  const { isInstalled, platform, setInstallPromptEligible, showInstallPrompt } =
+    usePwaInstallUi();
   const [profile, setProfile] = useState<Profile | null>(null),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
@@ -49,8 +41,11 @@ function App() {
       .then(setProfile)
       .catch(() => {})
       .finally(() => setLoading(false));
-    if ("serviceWorker" in navigator)
-      navigator.serviceWorker.register("/sw.js");
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((registrationError) => {
+        console.warn("AirSpace service worker registration failed", registrationError);
+      });
+    }
   }, []);
   useEffect(() => {
     let active = true;
@@ -129,6 +124,9 @@ function App() {
   useEffect(() => {
     if (profile && profile.locations.length === 0 && step === 0) setStep(1);
   }, [profile, step]);
+  useEffect(() => {
+    setInstallPromptEligible(Boolean(profile?.locations.length));
+  }, [profile, setInstallPromptEligible]);
   async function refreshProfile() {
     setProfile(await api.profile());
   }
@@ -206,6 +204,13 @@ function App() {
     }
   }
   async function notify() {
+    if (platform === "ios" && !isInstalled) {
+      showInstallPrompt();
+      setError(
+        "Install AirSpace from Safari, then reopen it from your Home Screen to enable notifications.",
+      );
+      return;
+    }
     if (!("Notification" in window) || !("serviceWorker" in navigator)) {
       setError(
         "This browser does not support plane notifications. You can still use the live dashboard.",
@@ -344,19 +349,20 @@ function App() {
           {step === 4 && (
             <div className="card">
               <h2>Ready for plane alerts?</h2>
-              {needsIosInstallation() && (
-                <p>
-                  On iPhone or iPad, first tap Safari’s Share button, choose{" "}
-                  <strong>Add to Home Screen</strong>, then open AirSpace from
-                  its new Home Screen icon to enable alerts.
-                </p>
+              {platform === "ios" && !isInstalled ? (
+                <>
+                  <p>
+                    First add AirSpace to your Home Screen. Reopen it from its icon, then enable
+                    notifications with a clear tap.
+                  </p>
+                  <button onClick={showInstallPrompt}>View install steps</button>
+                </>
+              ) : (
+                <>
+                  <p>Tap the button, then allow notifications when your browser asks.</p>
+                  <button onClick={notify}>Enable Plane Notifications</button>
+                </>
               )}
-              <p>
-                Tap the button, then allow notifications when your browser asks.
-              </p>
-              <button onClick={notify} disabled={needsIosInstallation()}>
-                Enable Plane Notifications
-              </button>
               <button className="quiet" onClick={() => setStep(5)}>
                 Not now
               </button>
@@ -449,6 +455,13 @@ function App() {
               onChanged={refreshProfile}
             />
           ))}
+          <p className="install-setting-status">
+            {isInstalled ? "AirSpace is installed on this device." : "AirSpace is open in a browser."}
+          </p>
+          {!isInstalled && (
+            <button onClick={showInstallPrompt}>Install AirSpace</button>
+          )}
+          <button onClick={notify}>Enable Plane Notifications</button>
           <button
             onClick={async () => {
               try {
@@ -487,6 +500,8 @@ function App() {
 }
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    {location.pathname.startsWith("/admin") ? <AdminApp /> : <App />}
+    <PwaInstallProvider>
+      {location.pathname.startsWith("/admin") ? <AdminApp /> : <App />}
+    </PwaInstallProvider>
   </React.StrictMode>,
 );
