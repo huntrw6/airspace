@@ -393,7 +393,7 @@ function App() {
     <main>
       <AppHeader connectionState={connectionState} />
       <section className="dashboard-section">
-        <h1>{nearby.length ? "A plane is nearby" : "The sky is quiet"}</h1>
+        <h1>{nearby.length ? "An aircraft is nearby" : "The sky is quiet"}</h1>
         <FlightMap locations={profile.locations} sightings={nearby} />
         <div className="grid">
           {nearbyPanels.map((s) => (
