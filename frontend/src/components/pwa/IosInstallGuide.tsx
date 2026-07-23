@@ -16,7 +16,7 @@ export function IosInstallGuide() {
         </li>
         <li>
           <span className="install-step-visual add-symbol" aria-hidden="true">＋</span>
-          <span><strong>Add to Home Screen</strong><small>Scroll down if you do not see it.</small></span>
+          <span><strong>Add to Home Screen</strong><small>Scroll down if you don't see it.</small></span>
         </li>
         <li>
           <span className="install-step-visual confirm-symbol" aria-hidden="true">Add</span>

@@ -289,15 +289,15 @@ function App() {
       <main>
         <AppHeader connectionState={connectionState} />
         <section className="hero">
-          <p className="eyebrow">PLANES, MADE FRIENDLY</p>
+          <p className="eyebrow"></p>
           <h1>
             Know what’s flying
             <br />
             <em>over your home.</em>
           </h1>
           <p>
-            Choose a viewing spot and AirSpace will tell you when an interesting
-            aircraft is nearby—no aviation knowledge needed.
+            Choose a radius & watch nearby aircraft on a live radar-style map,
+            receiving browser notifications when something enters your airspace.
           </p>
           {step === 0 && (
             <button onClick={begin}>
@@ -306,10 +306,10 @@ function App() {
           )}
           {step === 1 && (
             <div className="card">
-              <h2>Where do you watch planes?</h2>
+              <h2>Where do you plane watch?</h2>
               <p>
-                Your exact location is private to this browser profile. We do
-                not sell it or use advertising trackers.
+                Your location is private to this browser profile.
+                We do not sell it or use advertising trackers.
               </p>
               <button onClick={locate}>Use my current location</button>
               <AddressSearch
@@ -338,7 +338,7 @@ function App() {
           )}
           {step === 2 && (
             <div className="card">
-              <h2>How close should planes be?</h2>
+              <h2>How far do you want to see?</h2>
               <div className="choices">
                 {Object.entries(presets).map(([n, v]) => (
                   <button
@@ -401,7 +401,7 @@ function App() {
           ))}
         </div>
         <details open={Boolean(selectedSighting)}>
-          <summary>Recent sighting history ({history.length})</summary>
+          <summary>Recent history ({history.length})</summary>
           <div className="grid history">
             {history.length ? history.map((s) => <SightingCard key={`history-${s.id}`} sighting={s} expanded={selectedSighting === s.id} />) : <p>No completed sightings yet.</p>}
           </div>
@@ -412,7 +412,7 @@ function App() {
           </p>
         )}
         <details>
-          <summary>Privacy and profile settings</summary>
+          <summary>Configuration</summary>
           <button
             onClick={() => {
               setPosition(null);
@@ -469,7 +469,7 @@ function App() {
           {!isInstalled && (
             <button onClick={showInstallPrompt}>Install AirSpace</button>
           )}
-          <button onClick={notify}>Enable Plane Notifications</button>
+          <button onClick={notify}>Enable Notifications</button>
           <button
             onClick={async () => {
               try {
@@ -488,7 +488,7 @@ function App() {
               }
             }}
           >
-            Send a test notification
+            Test notification
           </button>
           <button
             className="danger"
@@ -499,7 +499,7 @@ function App() {
               }
             }}
           >
-            Delete all my data
+            Reset my data
           </button>
         </details>
       </section>
