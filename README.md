@@ -1,7 +1,7 @@
 # AirSpace
 
 [![Star](https://img.shields.io/github/stars/huntrw6/airspace?style=flat&label=%E2%98%86%20Star&labelColor=555&color=yellow)](https://github.com/huntrw6/airspace)
-[![Follow](https://img.shields.io/github/followers/huntrw6?style=flat&label=%E2%99%A1%20Follow&labelColor=555&color=1f6feb)](https://github.com/huntrw6)
+[![Follow](https://img.shields.io/github/followers/huntrw6?style=flat&label=%E2%99%A1%20Follow&labelColor=555&color=red)](https://github.com/huntrw6)
 [![Container](https://img.shields.io/badge/%F0%9F%93%A6%20Container-Published-brightgreen?style=flat)](https://github.com/huntrw6/airspace/actions/workflows/publish-container.yml)
 [![Image](https://img.shields.io/badge/Image-1f6feb?style=flat&logo=docker&logoColor=white)](https://github.com/huntrw6/airspace/pkgs/container/airspace)
 
