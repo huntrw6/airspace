@@ -54,6 +54,41 @@ logger = logging.getLogger("airspace.push")
 logger.setLevel(logging.WARNING)
 
 
+BADGE_URLS = {
+    "stars": (
+        "https://img.shields.io/github/stars/huntrw6/airspace"
+        "?style=flat&label=%E2%98%86%20Star&labelColor=555&color=yellow"
+    ),
+    "followers": (
+        "https://img.shields.io/github/followers/huntrw6"
+        "?style=flat&label=%E2%99%A1%20Follow&labelColor=555&color=red"
+    ),
+    "image": (
+        "https://img.shields.io/badge/"
+        "Image-1f6feb?style=flat&logo=docker&logoColor=white"
+    ),
+}
+
+
+@app.get("/api/badges/{badge_name}")
+async def badge_proxy(badge_name: str) -> Response:
+    badge_url = BADGE_URLS.get(badge_name)
+
+    if badge_url is None:
+        raise HTTPException(status_code=404, detail="Badge not found")
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        response = await client.get(badge_url)
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=502, detail="Could not load badge")
+
+    return Response(
+        content=response.content,
+        media_type=response.headers.get("content-type", "image/svg+xml"),
+        headers={"Cache-Control": "public, max-age=300"},
+    )
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     global polling_worker, polling_task, retention_worker, retention_task, geocoder, aircraft_photos

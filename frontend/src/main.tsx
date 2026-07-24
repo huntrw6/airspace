@@ -506,18 +506,25 @@ function App() {
     </main>
   );
 }
-function SiteFooter() {
-  const badgeStyle: React.CSSProperties = {
-    display: "block",
-    height: "24px",
-    width: "auto",
-  };
 
-  const linkStyle: React.CSSProperties = {
-    display: "inline-flex",
-    borderRadius: "5px",
-    textDecoration: "none",
-  };
+function SiteFooter() {
+  const badges = [
+    {
+      href: "https://github.com/huntrw6/airspace",
+      src: "/api/badges/stars",
+      alt: "Star AirSpace on GitHub",
+    },
+    {
+      href: "https://github.com/huntrw6",
+      src: "/api/badges/followers",
+      alt: "Follow huntrw6 on GitHub",
+    },
+    {
+      href: "https://github.com/huntrw6/airspace/pkgs/container/airspace",
+      src: "/api/badges/image",
+      alt: "View the AirSpace container image",
+    },
+  ];
 
   return (
     <footer
@@ -531,59 +538,37 @@ function SiteFooter() {
         borderTop: "1px solid #ffffff26",
       }}
     >
-      <a
-        href="https://github.com/huntrw6/airspace"
-        target="_blank"
-        rel="noopener noreferrer"
-        title="Star AirSpace on GitHub"
-        style={linkStyle}
-      >
-        <img
-          src="https://img.shields.io/github/stars/huntrw6/airspace?style=flat&label=%E2%98%86%20Star&labelColor=555&color=yellow"
-          alt="Star AirSpace on GitHub"
-          height={24}
-          loading="lazy"
-          decoding="async"
-          style={badgeStyle}
-        />
-      </a>
-
-      <a
-        href="https://github.com/huntrw6"
-        target="_blank"
-        rel="noopener noreferrer"
-        title="Follow huntrw6 on GitHub"
-        style={linkStyle}
-      >
-        <img
-          src="https://img.shields.io/github/followers/huntrw6?style=flat&label=%E2%99%A1%20Follow&labelColor=555&color=red"
-          alt="Follow huntrw6 on GitHub"
-          height={24}
-          loading="lazy"
-          decoding="async"
-          style={badgeStyle}
-        />
-      </a>
-
-      <a
-        href="https://github.com/huntrw6/airspace/pkgs/container/airspace"
-        target="_blank"
-        rel="noopener noreferrer"
-        title="View the AirSpace container image"
-        style={linkStyle}
-      >
-        <img
-          src="https://img.shields.io/badge/Image-1f6feb?style=flat&logo=docker&logoColor=white"
-          alt="View the AirSpace container image"
-          height={24}
-          loading="lazy"
-          decoding="async"
-          style={badgeStyle}
-        />
-      </a>
+      {badges.map((badge) => (
+        <a
+          key={badge.href}
+          href={badge.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={badge.alt}
+          style={{
+            display: "inline-flex",
+            borderRadius: "5px",
+            textDecoration: "none",
+          }}
+        >
+          <img
+            src={badge.src}
+            alt={badge.alt}
+            height={24}
+            loading="lazy"
+            decoding="async"
+            style={{
+              display: "block",
+              height: "24px",
+              width: "auto",
+            }}
+          />
+        </a>
+      ))}
     </footer>
   );
 }
+
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <PwaInstallProvider>
