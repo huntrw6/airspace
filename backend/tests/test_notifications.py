@@ -196,9 +196,9 @@ def test_notification_payload_uses_friendly_multiline_format():
             altitude_ft=39000,
         )
         payload = notification_payload(sighting, "https://planes.example.com")
-        assert payload["title"] == "Hawaiian Airlines ASA836"
+        assert payload["title"] == "Hawaiian Airlines ASA836 ✈️"
         assert payload["body"] == (
-            "📡 In Your AirSpace ✈️\nHonolulu ➤ Phoenix\n"
+            "Honolulu ➤ Phoenix\n"
             "Airbus A330 at 39,000 feet"
         )
 
@@ -223,6 +223,10 @@ def test_helicopter_notification_uses_helicopter_symbol():
         _, sighting = seeded_delivery(db, settings())
         sighting.snapshot["aircraft_type"] = "Airbus Helicopters H145"
         payload = notification_payload(sighting, "https://planes.example.com")
-        assert payload["body"].startswith("📡 In Your AirSpace 🚁\n")
+        assert payload["title"] == "An aircraft 🚁"
+        assert payload["body"] == (
+            "an unknown origin ➤ an unknown destination\n"
+            "Airbus Helicopters H145"
+        )
     assert aircraft_kind("R44") == "helicopter"
     assert aircraft_kind("B738") == "plane"
