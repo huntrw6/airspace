@@ -223,7 +223,7 @@ def test_helicopter_notification_uses_helicopter_symbol():
         _, sighting = seeded_delivery(db, settings())
         sighting.snapshot["aircraft_type"] = "Airbus Helicopters H145"
         payload = notification_payload(sighting, "https://planes.example.com")
-        assert payload["title"] == "An aircraft 🚁"
+        assert payload["title"] == "AS1 🚁"
         assert payload["body"] == (
             "an unknown origin ➤ an unknown destination\n"
             "Airbus Helicopters H145"
