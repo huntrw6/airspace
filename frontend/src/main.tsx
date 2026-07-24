@@ -520,9 +520,9 @@ function SiteFooter() {
       alt: "Follow huntrw6 on GitHub",
     },
     {
-      href: "https://github.com/huntrw6/airspace/pkgs/container/airspace",
-      src: "/api/badges/image",
-      alt: "View the AirSpace container image",
+      href: "https://github.com/huntrw6/airspace",
+      src: "/api/badges/github",
+      alt: "View AirSpace on GitHub",
     },
   ];
 

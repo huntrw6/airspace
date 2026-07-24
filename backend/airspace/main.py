@@ -63,9 +63,9 @@ BADGE_URLS = {
         "https://img.shields.io/github/followers/huntrw6"
         "?style=flat&label=%E2%99%A1%20Follow&labelColor=555&color=red"
     ),
-    "image": (
+    "github": (
         "https://img.shields.io/badge/"
-        "Image-1f6feb?style=flat&logo=docker&logoColor=white"
+        "GitHub-000000?style=flat&logo=github&logoColor=white"
     ),
 }
 
