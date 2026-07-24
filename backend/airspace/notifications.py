@@ -52,9 +52,8 @@ def notification_payload(
     flight_name = " ".join(value for value in (airline, callsign) if value)
     altitude_text = f" at {altitude:,.0f} feet" if isinstance(altitude, (int, float)) else ""
     payload = {
-        "title": flight_name,
+        "title": f"{flight_name} {aircraft_symbol}",
         "body": (
-            f"📡 In Your AirSpace {aircraft_symbol}\n"
             f"{origin} ➤ {destination}\n"
             f"{aircraft}{altitude_text}"
         ),
