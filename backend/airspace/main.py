@@ -69,26 +69,6 @@ BADGE_URLS = {
     ),
 }
 
-
-@app.get("/api/badges/{badge_name}")
-async def badge_proxy(badge_name: str) -> Response:
-    badge_url = BADGE_URLS.get(badge_name)
-
-    if badge_url is None:
-        raise HTTPException(status_code=404, detail="Badge not found")
-
-    async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.get(badge_url)
-
-    if response.status_code != 200:
-        raise HTTPException(status_code=502, detail="Could not load badge")
-
-    return Response(
-        content=response.content,
-        media_type=response.headers.get("content-type", "image/svg+xml"),
-        headers={"Cache-Control": "public, max-age=300"},
-    )
-
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     global polling_worker, polling_task, retention_worker, retention_task, geocoder, aircraft_photos
@@ -124,6 +104,25 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="AirSpace API", version=__version__, lifespan=lifespan)
+
+@app.get("/api/badges/{badge_name}")
+async def badge_proxy(badge_name: str) -> Response:
+    badge_url = BADGE_URLS.get(badge_name)
+
+    if badge_url is None:
+        raise HTTPException(status_code=404, detail="Badge not found")
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        response = await client.get(badge_url)
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=502, detail="Could not load badge")
+
+    return Response(
+        content=response.content,
+        media_type=response.headers.get("content-type", "image/svg+xml"),
+        headers={"Cache-Control": "public, max-age=300"},
+    )
 
 
 def utc_iso(value: datetime) -> str:
