@@ -5,17 +5,14 @@
 [![Container](https://img.shields.io/badge/%F0%9F%93%A6%20Container-Published-brightgreen?style=flat)](https://github.com/huntrw6/airspace/actions/workflows/publish-container.yml)
 [![Image](https://img.shields.io/badge/Image-1f6feb?style=flat&logo=docker&logoColor=white)]([https://github.com/huntrw6/airspace/pkgs/container/airspace](https://hub.docker.com/r/huntrw6/airspace))
 
-AirSpace is a friendly, self-hosted flight tracker. Choose a radius & watch nearby
-aircraft on a live radar-style map, receiving browser notifications when something enters your
-airspace.
+**AirSpace is a friendly, self-hosted flight tracker. Choose a radius & watch nearby aircraft on<br>a live radar-style map, receiving browser notifications when something enters Your AirSpace.**
 
+<br>
 <p align="center">
-  <img src=".github/images/airplane-landing.png" alt="Airplane landing over Los Angeles" width="100%">
-</p>
-
-<p align="center">
+  <img src=".github/images/airplane-landing.png" alt="Airplane landing over Los Angeles" width="100%"><br>
   <sub>Photo credit: Danté Vincent</sub>
 </p>
+<br><br>
 
 - Responsive Progressive Web App for desktop, Android, iPhone, and iPad
 - Live aircraft map with markers for planes and helicopters
@@ -24,9 +21,12 @@ airspace.
 - Private, anonymous browser profiles with no accounts or passwords
 - Multi-architecture Docker images for AMD64 and ARM64
 
+<br>
 
 > AirSpace uses FlightRadar24 endpoints that may occasionally change, throttle, or
 > become unavailable.
+
+<br>
 
 ## Portainer stack
 
@@ -82,6 +82,8 @@ sessions in the persistent `airspace-data` volume. VAPID keys and the session pe
 automatically on first startup. To pull from Docker Hub instead of GHCR, replace the image line with
 `image: huntrw6/airspace:latest`.
 
+<br>
+
 ## Docker Compose
 
 ```bash
@@ -94,6 +96,8 @@ docker compose up -d
 
 Open `http://SERVER-IP:7373` for a local test.
 
+<br>
+
 ## HTTPS and notifications
 
 Use an HTTPS reverse proxy for public access and set `AIRSPACE_PUBLIC_URL` to that exact public URL.
@@ -103,6 +107,8 @@ in front of AirSpace, use `AIRSPACE_TRUSTED_PROXY_HOPS=1`; otherwise leave it at
 On iPhone or iPad, open AirSpace in Safari, choose **Share → Add to Home Screen**, open the installed
 web app, and then enable notifications. Avoid private/incognito mode because the browser may discard
 the anonymous profile and push subscription.
+
+<br>
 
 ## Updating and troubleshooting
 
@@ -124,6 +130,8 @@ curl http://localhost:7373/health/ready
 
 Back up the persistent `airspace-data` volume before major updates. Pin `AIRSPACE_IMAGE` to a
 version or image digest when a deployment should not automatically follow `latest`.
+
+<br>
 
 ## Development
 
