@@ -9,6 +9,14 @@ AirSpace is a friendly, self-hosted flight tracker. Choose a radius & watch near
 aircraft on a live radar-style map, receiving browser notifications when something enters your
 airspace.
 
+<p align="center">
+  <img src=".github/images/airplane-landing.png" alt="Airplane landing over Los Angeles" width="100%">
+</p>
+
+<p align="center">
+  <sub>Photo credit: Danté Vincent</sub>
+</p>
+
 - Responsive Progressive Web App for desktop, Android, iPhone, and iPad
 - Live aircraft map with markers for planes and helicopters
 - Browser push notifications—no text or email service required
