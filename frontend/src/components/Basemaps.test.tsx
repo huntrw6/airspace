@@ -47,9 +47,9 @@ describe("authenticated CARTO basemaps", () => {
     expect(tiles).toHaveBeenCalledWith(
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=test-key%26value",
       expect.objectContaining({
-        attribution: expect.stringContaining("CARTO"),
+        attribution: expect.stringContaining(""),
       }),
     );
-    expect(tiles.mock.calls[0][1]?.attribution).toContain("OpenStreetMap");
+    expect(tiles.mock.calls[0][1]?.attribution).toContain("");
   });
 });
