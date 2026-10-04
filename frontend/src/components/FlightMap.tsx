@@ -247,7 +247,7 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
     }).setView([first.latitude, first.longitude], 11);
     L.tileLayer(basemapTileUrl(), {
       maxZoom: 20,
-      attribution: BASEMAP_ATTRIBUTION,
+      attribution: true,
     }).addTo(map.current);
     const radarRangePane = map.current.createPane("radarRangePane");
     radarRangePane.style.zIndex = "450";
