@@ -3,6 +3,8 @@ WORKDIR /build
 COPY frontend/package*.json ./
 RUN npm install
 COPY frontend/ ./
+# This client-side basemap key is intentionally visible in the browser bundle.
+ARG VITE_CARTO_BASEMAPS_API_KEY
 RUN npm run build
 
 FROM python:3.12-slim AS runtime

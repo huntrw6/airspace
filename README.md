@@ -133,6 +133,34 @@ version or image digest when a deployment should not automatically follow `lates
 
 <br>
 
+## CARTO basemap key
+
+The flight map and location picker use CARTO's dark raster basemap. Register for a
+basemap key at https://carto.com/basemaps/apikey to remove the "API key required"
+watermark.
+
+For images published by this repository's GitHub Actions workflow, set the repository
+Actions secret `CARTO_BASEMAPS_API_KEY`, then publish a new image and pull/redeploy it
+in Portainer. The same key is included in both GHCR and Docker Hub builds.
+
+For a local image build:
+
+```bash
+read -r -s -p "CARTO basemap key: " VITE_CARTO_BASEMAPS_API_KEY
+export VITE_CARTO_BASEMAPS_API_KEY
+docker build --build-arg VITE_CARTO_BASEMAPS_API_KEY -t airspace:local .
+unset VITE_CARTO_BASEMAPS_API_KEY
+```
+
+For frontend development, put `VITE_CARTO_BASEMAPS_API_KEY=your-key` in
+`frontend/.env.local` before starting Vite. This is a **build-time, client-side**
+key: setting it only in a running container's environment will not update the map.
+It is visible in browser tile requests and the built JavaScript, so use a dedicated
+basemap key, not a private backend credential. After updating, force-refresh the
+browser or close and reopen the installed PWA to clear old map tiles.
+
+<br>
+
 ## Development
 
 ```bash

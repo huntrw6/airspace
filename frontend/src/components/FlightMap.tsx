@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import type { Location, Sighting } from "../api";
+import { BASEMAP_ATTRIBUTION, basemapTileUrl } from "../lib/basemap";
 
 const EARTH_RADIUS_KM = 6371;
 const KNOTS_TO_KM_PER_SECOND = 0.000514444;
@@ -244,9 +245,9 @@ export function FlightMap({ locations, sightings }: { locations: Location[]; sig
       keyboard: false,
       touchZoom: false,
     }).setView([first.latitude, first.longitude], 11);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    L.tileLayer(basemapTileUrl(), {
       maxZoom: 20,
-      attribution: '',
+      attribution: BASEMAP_ATTRIBUTION,
     }).addTo(map.current);
     const radarRangePane = map.current.createPane("radarRangePane");
     radarRangePane.style.zIndex = "450";

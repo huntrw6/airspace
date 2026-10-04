@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { BASEMAP_ATTRIBUTION, basemapTileUrl } from "../lib/basemap";
 
 type Position = { latitude: number; longitude: number };
 
@@ -26,14 +27,10 @@ export function MapPicker({
       center,
       position ? 13 : 3,
     );
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      {
-        maxZoom: 19,
-        attribution:
-          '',
-      },
-    ).addTo(map);
+    L.tileLayer(basemapTileUrl(), {
+      maxZoom: 19,
+      attribution: BASEMAP_ATTRIBUTION,
+    }).addTo(map);
     let marker: L.CircleMarker | undefined;
     let radius: L.Circle | undefined;
     const draw = (point: Position) => {
